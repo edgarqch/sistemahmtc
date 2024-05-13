@@ -1,0 +1,104 @@
+{% extends 'index.html' %}
+{% block titulo %}
+    Subir Instrumentos
+{% endblock titulo %}
+
+{% block contenido %}
+    <div class="clearfix"></div>
+    <div class="row">
+        <div class="col-md-12 col-sm-12 ">
+            <div class="x_panel">
+                <div class="x_title">
+                    <h2>Formulario de registro <small>Crear instrumento</small></h2>
+                    <ul class="nav navbar-right panel_toolbox">
+                        <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                        </li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                            <ul class="dropdown-menu" role="menu">
+                                <li><a class="dropdown-item" href="#">Settings 1</a>
+                                </li>
+                                <li><a class="dropdown-item" href="#">Settings 2</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li><a class="close-link"><i class="fa fa-close"></i></a>
+                        </li>
+                    </ul>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="x_content">
+                    <br />
+                    <form method="POST" id="demo-form2" data-parsley-validate class="form-horizontal form-label-left" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="item form-group">
+                            <label class="col-form-label col-md-3 col-sm-3 label-align" for="first-name">Título<span class="required">*</span>
+                            </label>
+                            <div class="col-md-6 col-sm-6 ">
+                                <input type="text" name="titulo" id="first-name" required="required" class="form-control ">
+                            </div>
+                        </div>
+                        <div class="item form-group">
+                            <label class="col-form-label col-md-3 col-sm-3 label-align" for="last-name">Categoria<span class="required">*</span>
+                            </label>
+                            <div class="col-md-6 col-sm-6 ">
+                                <input type="text" name="categoria" id="last-name" required="required" class="form-control">
+                            </div>
+                        </div>
+                        <div class="item form-group">
+                            <label for="middle-name" class="col-form-label col-md-3 col-sm-3 label-align">Descripción</label>
+                            <div class="col-md-6 col-sm-6 ">
+                                <input type="textarea" name="descripcion" id="middle-name" class="form-control">
+                            </div>
+                        </div>
+                        <div class="item form-group">
+                            <label for="middle-name" class="col-form-label col-md-3 col-sm-3 label-align">Documento</label>
+                            <div class="col-md-6 col-sm-6 ">
+                                <input type="file" name="documento" id="middle-name" class="form-control">
+                            </div>
+                        </div>
+                        <div class="item form-group">
+                            <label class="col-form-label col-md-3 col-sm-3 label-align">Fecha de Creacion <span class="required">*</span>
+                            </label>
+                            <div class="col-md-6 col-sm-6 ">
+                                <input id="birthday" class="date-picker form-control" placeholder="dd-mm-yyyy" type="text" name="fecha_creacion" required="required" type="text" onfocus="this.type='date'" onmouseover="this.type='date'" onclick="this.type='date'" onblur="this.type='text'" onmouseout="timeFunctionLong(this)">
+                                <script>
+                                    function timeFunctionLong(input) {
+                                        setTimeout(function() {
+                                            input.type = 'text';
+                                        }, 60000);
+                                    }
+                                </script>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-form-label col-md-3 col-sm-3 label-align">Autores</label>
+                            <div class="col-md-9 col-sm-9 ">
+                                <select class="select2_multiple form-control" name = 'autor_id' multiple="multiple">
+                                    {% if instrumento_form.autor_id %}
+                                        {% for autores in instrumento_form.autor_id %}
+                                            <option>{{ autores }}</option>
+                                        {% endfor %}
+                                    {% else %}
+                                        <option>No existen autores</option>
+                                    {% endif %}
+                                </select>
+                            </div>
+                        </div>                        
+                        <div class="ln_solid"></div>
+                        <div class="item form-group">
+                            <div class="col-md-6 col-sm-6 offset-md-3">
+                                <a href="/index" class="btn btn-primary">Cancelelar</a>
+                                <button class="btn btn-primary" type="reset">Limpiar</button>
+                                <button type="submit" class="btn btn-success">Registrar</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock contenido %}
+
+
+
