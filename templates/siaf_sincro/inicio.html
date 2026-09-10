@@ -1,0 +1,83 @@
+{% extends "index.html" %}
+{% load static %}
+{% load almacen_tags %}
+
+{% block contenido %}
+<div style="padding: 15px; background-color: #F7F9FA; min-height: 85vh;">
+  
+  <!-- 🌟 SECCIÓN 1: BIENVENIDA PERSONALIZADA -->
+  <div class="row" style="margin-bottom: 20px;">
+    <div class="col-md-12 col-sm-12 col-xs-12">
+      <div class="x_panel" style="background: #fff; padding: 20px; border-radius: 8px; border-left: 5px solid #26B99A; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">
+        <div class="x_content" style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h2 style="color: #2A3F54; font-weight: bold; margin: 0 0 5px 0; font-size: 24px;">
+              ¡Bienvenido, {{ request.user.username }}!
+            </h2>
+            <p class="text-muted" style="font-size: 13px; margin: 0;">
+              <i class="fa fa-hospital-o"></i> Hospital Madre Teresa de Calcuta — Panel de Gestión de Almacenes.
+            </p>
+          </div>
+          <div class="hidden-xs">
+            <!-- Imagen institucional pequeña adaptada como logo elegante de esquina -->
+            <img src="{% static 'images/calcuta1.jpg' %}" alt="HMTC Logo" style="max-height: 55px; border-radius: 4px; border: 1px solid #ddd;">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 📊 SECCIÓN 2: TARJETAS DE ACCESO RÁPIDO SEGÚN ROL -->
+  <div class="row">
+    <div class="col-md-12">
+      <p class="text-muted" style="margin-bottom: 15px;">Seleccione la operación que desea ejecutar el día de hoy:</p>
+    </div>
+  </div>
+
+  <div class="row text-center">
+    
+    <!-- 🛒 OPCIONES PARA SOLICITANTES (Y SUPERUSUARIOS) -->
+    {% if request.user|tiene_rol:"Solicitantes_Almacen" %}
+    <div class="col-md-4 col-sm-6 col-xs-12" style="margin-bottom: 20px;">
+      <a href="{% url 'siaf_sincro:listado_items' %}" class="btn btn-default btn-block" style="padding: 25px 15px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: block; text-decoration: none;">
+        <i class="fa fa-cart-plus" style="font-size: 36px; color: #26B99A; margin-bottom: 12px; display: block;"></i>
+        <span style="font-weight: bold; color: #2A3F54; display: block; font-size: 16px;">Solicitar Insumos</span>
+        <small class="text-muted" style="display: block; margin-top: 5px;">Explorar catálogo del Almacén Central</small>
+      </a>
+    </div>
+
+    <div class="col-md-4 col-sm-6 col-xs-12" style="margin-bottom: 20px;">
+      <a href="{% url 'siaf_sincro:historial_pedidos' %}" class="btn btn-default btn-block" style="padding: 25px 15px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: block; text-decoration: none;">
+        <i class="fa fa-history" style="font-size: 36px; color: #73879C; margin-bottom: 12px; display: block;"></i>
+        <span style="font-weight: bold; color: #2A3F54; display: block; font-size: 16px;">Mis Pedidos</span>
+        <small class="text-muted" style="display: block; margin-top: 5px;">Historial de solicitudes y descarga de PDF</small>
+      </a>
+    </div>
+    {% endif %}
+
+    <!-- 🏛️ OPCIÓN PARA DIRECCIÓN / APROBADORES (Y SUPERUSUARIOS) -->
+    {% if request.user|tiene_rol:"Aprobadores_Almacen" %}
+    <div class="col-md-4 col-sm-6 col-xs-12" style="margin-bottom: 20px;">
+      <a href="{% url 'siaf_sincro:listado_autorizaciones' %}" class="btn btn-default btn-block" style="padding: 25px 15px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: block; text-decoration: none;">
+        <i class="fa fa-check-square-o" style="font-size: 36px; color: #E67E22; margin-bottom: 12px; display: block;"></i>
+        <span style="font-weight: bold; color: #2A3F54; display: block; font-size: 16px;">Autorizaciones Dirección</span>
+        <small class="text-muted" style="display: block; margin-top: 5px;">Revisar y otorgar Vistos Buenos pendientes</small>
+      </a>
+    </div>
+    {% endif %}
+
+    <!-- 📦 OPCIÓN PARA RESPONSABLES DE ALMACÉN (Y SUPERUSUARIOS) -->
+    {% if request.user|tiene_rol:"Almaceneros_Almacen" %}
+    <div class="col-md-4 col-sm-6 col-xs-12" style="margin-bottom: 20px;">
+      <a href="{% url 'siaf_sincro:listado_despachos' %}" class="btn btn-default btn-block" style="padding: 25px 15px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: block; text-decoration: none;">
+        <i class="fa fa-truck" style="font-size: 36px; color: #3498DB; margin-bottom: 12px; display: block;"></i>
+        <span style="font-weight: bold; color: #2A3F54; display: block; font-size: 16px;">Despachos Almacén</span>
+        <small class="text-muted" style="display: block; margin-top: 5px;">Entrega física de bienes y rebaja de stock</small>
+      </a>
+    </div>
+    {% endif %}
+
+  </div>
+
+</div>
+{% endblock contenido %}

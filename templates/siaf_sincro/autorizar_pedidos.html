@@ -1,0 +1,127 @@
+{% extends "index.html" %}
+{% load static %}
+
+{% block titulo %} Autorización de Pedidos {% endblock titulo %}
+
+{% block extracss %}
+<style>
+  .x_panel { margin-top: 10px; }
+  .panel-heading { background-color: #f5f7fa; padding: 10px 15px; border-radius: 4px; margin-bottom: 5px; border: 1px solid #e6e9ed; }
+  .panel-title a { font-size: 14px; font-weight: bold; color: #2A3F54; display: block; text-decoration: none; }
+  .tabla-detalle th { background-color: #34495E; color: white; font-size: 11px; padding: 6px; }
+  .tabla-detalle td { padding: 6px; font-size: 12px; }
+</style>
+{% endblock extracss %}
+
+{% block contenido %}
+<div class="">
+  <div class="page-title">
+    <div class="title_left">
+      <h3>{{ titulo_pagina }}</h3>
+    </div>
+  </div>
+  <div class="clearfix"></div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+        <strong>Sistema:</strong> {{ message }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="row">
+    <div class="col-md-12 col-sm-12 col-xs-12">
+      <div class="x_panel">
+        <div class="x_title">
+          <h2>Solicitudes Pendientes de Visto Bueno <small>Dirección / Administración</small></h2>
+          <div class="clearfix"></div>
+        </div>
+        <div class="x_content">
+          <p class="text-muted font-13 m-b-30">
+            Haga clic sobre cualquier fila de pedido para desplegar el desglose de artículos solicitados y proceder con su firma.
+          </p>
+
+          <!-- Contenedor del Acordeón Dinámico -->
+          <div class="accordion" id="accordion" role="tablist" aria-multiselectable="true">
+            {% for pedido in pedidos %}
+            <div class="panel">
+              <div class="panel-heading" role="tab" id="heading-{{ pedido.id }}">
+                <h4 class="panel-title">
+                  <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-{{ pedido.id }}" aria-expanded="false" aria-controls="collapse-{{ pedido.id }}">
+                    <i class="fa fa-chevron-down"></i> &nbsp; 
+                    <strong>{{ pedido.codigo_pedido }}</strong> &mdash; 
+                    Solicitante: {{ pedido.usuario.get_full_name|default:pedido.usuario.username }} &mdash; 
+                    Fecha: {{ pedido.fecha_pedido|date:"d/m/Y H:i" }}
+                  </a>
+                </h4>
+              </div>
+              
+              <div id="collapse-{{ pedido.id }}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading-{{ pedido.id }}">
+                <div class="panel-body" style="padding: 15px; border: 1px solid #e6e9ed; margin-bottom: 15px; background: #fff;">
+                  
+                  <div class="well well-sm" style="background-color: #f9f9f9; margin-bottom: 10px;">
+                    <strong>Justificación o Destino del Pedido:</strong><br>
+                    <p style="margin-top: 5px; text-align: justify; font-style: italic;">"{{ pedido.justificacion }}"</p>
+                  </div>
+
+                  <!-- Tabla Interna de Ítems del Pedido -->
+                  <table class="table table-bordered table-striped tabla-detalle">
+                    <thead>
+                      <tr>
+                        <th style="width: 20%;">Código SIAF</th>
+                        <th style="width: 60%;">Descripción del Artículo</th>
+                        <th style="width: 20%;" class="text-center">Cantidad Solicitada</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for detalle in pedido.detalles.all %}
+                      <tr>
+                        <td><strong>{{ detalle.producto.codigo_siaf }}</strong></td>
+                        <td>{{ detalle.producto.nombre }} &nbsp;<span class="label label-default">{{ detalle.producto.unidad_medida }}</span></td>
+                        <td class="text-center"><strong>{{ detalle.cantidad_solicitada }}</strong></td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+
+                  <!-- Acciones de Autorización -->
+                  <div class="text-right" style="margin-top: 15px;">
+                    
+                    <!-- FORMULARIO 1: RECHAZAR (Va directo y sin ambigüedades) -->
+                    <form action="{% url 'siaf_sincro:procesar_autorizacion' pedido.id %}" method="POST" style="display: inline-block; margin-right: 5px;">
+                      {% csrf_token %}
+                      <input type="hidden" name="accion" value="RECHAZAR">
+                      <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Está seguro de que desea RECHAZAR este pedido?');">
+                        <i class="fa fa-times-circle"></i> Rechazar Solicitud
+                      </button>
+                    </form>
+
+                    <!-- FORMULARIO 2: AUTORIZAR (Va directo y sin ambigüedades) -->
+                    <form action="{% url 'siaf_sincro:procesar_autorizacion' pedido.id %}" method="POST" style="display: inline-block;">
+                      {% csrf_token %}
+                      <input type="hidden" name="accion" value="AUTORIZAR">
+                      <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('¿Otorgar el Visto Bueno y AUTORIZAR este pedido?');">
+                        <i class="fa fa-check-circle"></i> Otorgar Visto Bueno (Autorizar)
+                      </button>
+                    </form>
+
+                  </div>
+
+                </div>
+              </div>
+            </div>
+            {% empty %}
+            <div class="alert alert-info text-center" role="alert" style="margin-top: 20px;">
+              <i class="fa fa-info-circle"></i> No existen documentos de pedidos pendientes de autorización en este momento.
+            </div>
+            {% endfor %}
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock contenido %}

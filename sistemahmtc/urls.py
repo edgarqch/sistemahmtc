@@ -19,10 +19,17 @@ from django.conf import settings # se importo para los archivos media
 from django.views.static import serve # se importo para los archivos media
 from django.urls import path, include, re_path # se importo include
 from apps.biblioteca.views import Home
+# Importamos las vistas de autenticación nativas de Django
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    # 🔐 RUTA DEL LOGIN GENERAL DEL SISTEMA
+    path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
+    # 🔓 RUTA PARA CERRAR SESIÓN
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('biblioteca/', include(('apps.biblioteca.urls','biblioteca'))),
+    path('siaf/', include(('apps.siaf_sincro.urls', 'siaf_sincro'))),
     path('', Home, name='index'),
 ]
 

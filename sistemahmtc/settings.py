@@ -52,6 +52,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # Inyección de tu middleware personalizado de control
+    'apps.siaf_sincro.middleware.ObligarCambioContrasenaMiddleware',
 ]
 
 ROOT_URLCONF = 'sistemahmtc.urls'
@@ -139,3 +141,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# Ruta a la que se redirige si un usuario no está logueado e intenta entrar a una vista protegida
+LOGIN_URL = 'login'
+
+# Ruta a la que se redirige AUTOMÁTICAMENTE después de un inicio de sesión exitoso
+LOGIN_REDIRECT_URL = 'siaf_sincro:inicio'
+
+# Ruta a la que se redirige después de cerrar sesión
+LOGOUT_REDIRECT_URL = 'login'

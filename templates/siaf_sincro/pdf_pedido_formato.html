@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Pedido de Almacén {{ pedido.codigo_pedido }}</title>
+    <style>
+        @page {
+            size: a4;
+            margin: 1.5cm;
+            /* Eliminamos la regla @bottom-right que causaba el quiebre en Python 3.12 */
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            color: #333333;
+            line-height: 1.4;
+        }
+        /* Encabezado Institucional */
+        .header-table {
+            width: 100%;
+            border-bottom: 2px solid #2A3F54;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .hospital-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2A3F54;
+        }
+        .document-title {
+            font-size: 14px;
+            font-weight: bold;
+            text-align: right;
+            color: #333333;
+        }
+        .pedido-codigo {
+            font-size: 16px;
+            color: #E74C3C;
+            font-weight: bold;
+        }
+        /* Información de la Solicitud */
+        .info-table {
+            width: 100%;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            padding: 10px;
+        }
+        .info-table td {
+            padding: 4px;
+        }
+        .label {
+            font-weight: bold;
+            color: #2A3F54;
+            width: 18%;
+        }
+        /* Tabla de Contenido / Items */
+        .content-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 40px;
+        }
+        .content-table th {
+            background-color: #2A3F54;
+            color: #ffffff;
+            font-weight: bold;
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #2A3F54;
+        }
+        .content-table td {
+            padding: 8px;
+            border: 1px solid #dddddd;
+        }
+        .text-center {
+            text-align: center;
+        }
+        /* Sección de Firmas de Autorización */
+        .firma-section {
+            width: 100%;
+            margin-top: 60px;
+        }
+        .firma-box {
+            width: 45%;
+            text-align: center;
+            vertical-align: bottom;
+        }
+        .linea-firma {
+            border-top: 1px solid #333333;
+            width: 80%;
+            margin: 0 auto 5px auto;
+        }
+        /* Numeración compatible con Python 3.12 */
+        .footer-paginacion {
+            text-align: right;
+            font-size: 9px;
+            color: #555555;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Encabezado -->
+    <table class="header-table">
+        <tr>
+            <td>
+                <span class="hospital-title">{{ hospital_nombre }}</span><br>
+                <span style="color: #777777; font-size: 9px;">Sistema de Sincronización de Catálogos SIAF / SICE</span>
+            </td>
+            <td class="document-title">
+                DOCUMENTO DE PEDIDO<br>
+                <span class="pedido-codigo">{{ pedido.codigo_pedido }}</span>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Información General -->
+    <table class="info-table">
+        <tr>
+            <td class="label">Solicitante:</td>
+            <td>{{ pedido.usuario.get_full_name|default:pedido.usuario.username }}</td>
+            <td class="label">Fecha Pedido:</td>
+            <td>{{ pedido.fecha_pedido|date:"d/m/Y H:i" }}</td>
+        </tr>
+        <tr>
+            <td class="label">Estado Actual:</td>
+            <td><strong>{{ pedido.get_estado_display }}</strong></td>
+            <td class="label">Almacén Origen:</td>
+            <td>Almacén Central (General)</td>
+        </tr>
+        <tr>
+            <td class="label" style="vertical-align: top;">Justificación:</td>
+            <td colspan="3" style="text-align: justify;">{{ pedido.justificacion }}</td>
+        </tr>
+    </table>
+
+    <!-- Listado de Artículos Solicitados -->
+    <table class="content-table">
+        <thead>
+            <tr>
+                <th style="width: 15%;" class="text-center">Código SIAF</th>
+                <th style="width: 55%;">Descripción del Artículo</th>
+                <th style="width: 15%;" class="text-center">U. Medida</th>
+                <th style="width: 15%;" class="text-center">Cant. Solicitada</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for detalle in detalles %}
+            <tr>
+                <td class="text-center"><strong>{{ detalle.producto.codigo_siaf }}</strong></td>
+                <td>{{ detalle.producto.nombre }}</td>
+                <td class="text-center">{{ detalle.producto.unidad_medida }}</td>
+                <td class="text-center" style="font-size: 12px; font-weight: bold;">{{ detalle.cantidad_solicitada }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Firmas Reguladoras -->
+        <!-- Sección de Firmas Reguladoras del Hospital Calcuta -->
+    <table class="firma-section" style="width: 100%; margin-top: 70px;">
+        <tr>
+            <!-- 1. El que solicita -->
+            <td class="firma-box" style="width: 30%; text-align: center; vertical-align: bottom;">
+                <div class="linea-firma"></div>
+                <strong>Firma del Solicitante</strong><br>
+                <span style="font-size: 9px; color: #555;">Sello de Unidad/Servicio</span>
+            </td>
+            <td style="width: 5%;"></td>
+            
+            <!-- 2. El que autoriza (Director o Administrador) -->
+            <td class="firma-box" style="width: 30%; text-align: center; vertical-align: bottom;">
+                <div class="linea-firma"></div>
+                <strong>Vo.Bo. Dirección / Admin.</strong><br>
+                <span style="font-size: 9px; color: #555;">Firma y Sello de Autorización</span>
+            </td>
+            <td style="width: 5%;"></td>
+            
+            <!-- 3. El que entrega los productos físicos -->
+            <td class="firma-box" style="width: 30%; text-align: center; vertical-align: bottom;">
+                <div class="linea-firma"></div>
+                <strong>Entregado por Almacén</strong><br>
+                <span style="font-size: 9px; color: #555;">Firma y Sello Responsable</span>
+            </td>
+        </tr>
+    </table>
+
+
+    <!-- Paginador compatible con Python 3.12 usando tags nativos de xhtml2pdf -->
+    <div class="footer-paginacion">
+        Página <pdf:pagenumber /> de <pdf:pagecount />
+    </div>
+
+</body>
+</html>

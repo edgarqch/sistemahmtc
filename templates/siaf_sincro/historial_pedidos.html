@@ -1,0 +1,127 @@
+{% extends "index.html" %}
+{% load static %}
+
+{% block titulo %} Historial de Pedidos {% endblock titulo %}
+
+{% block extracss %}
+<!-- CSS Local de DataTables desde tus carpetas en vendors -->
+<link href="{% static 'vendors/datatables.net-bs/css/dataTables.bootstrap.min.css' %}" rel="stylesheet">
+<link href="{% static 'vendors/datatables.net-responsive-bs/css/responsive.bootstrap.min.css' %}" rel="stylesheet">
+
+<style>
+  .x_panel { margin-top: 10px; }
+  .dataTables_filter { text-align: right; }
+  .dataTables_paginate { text-align: right; }
+</style>
+{% endblock extracss %}
+
+{% block contenido %}
+<div class="">
+  
+  <div class="page-title">
+    <div class="title_left">
+      <h3>{{ titulo_pagina }}</h3>
+    </div>
+  </div>
+
+  <div class="clearfix"></div>
+
+  <!-- Alertas de Django para mostrar el mensaje de éxito al guardar -->
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+        <strong>Sistema:</strong> {{ message }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="row">
+    <div class="col-md-12 col-sm-12 col-xs-12">
+      <div class="x_panel">
+        
+        <div class="x_title">
+          <h2>Solicitudes Realizadas <small>Almacén Central</small></h2>
+          <div class="clearfix"></div>
+        </div>
+        
+        <div class="x_content">
+          <p class="text-muted font-13 m-b-30">
+            A continuación se listan todos los pedidos de insumos médicos y generales solicitados por su cuenta de usuario.
+          </p>
+          
+          <!-- Tabla con ID 'datatable' para activación nativa automática de Gentelella -->
+          <table id="datatable" class="table table-striped table-bordered dt-responsive nowrap" cellspacing="0" width="100%">
+            <thead>
+              <tr>
+                <th style="width: 15%;">Nro. Pedido</th>
+                <th style="width: 20%;">Fecha de Solicitud</th>
+                <th style="width: 40%;">Justificación o Destino</th>
+                <th style="width: 15%;">Estado</th>
+                <th style="width: 10%;">Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for pedido in pedidos %}
+              <tr>
+                <td><strong>{{ pedido.codigo_pedido }}</strong></td>
+                <td>{{ pedido.fecha_pedido|date:"d/m/Y H:i" }}</td>
+                <td>{{ pedido.justificacion|truncatechars:60 }}</td>
+                <td>
+                  {% if pedido.estado == 'PENDIENTE' %}
+                    <span class="label label-warning" style="background-color: #F39C12; color: white; padding: 4px 8px; border-radius: 3px;">Pendiente</span>
+                  {% elif pedido.estado == 'AUTORIZADO' %}
+                    <span class="label label-primary" style="background-color: #3498DB; color: white; padding: 4px 8px; border-radius: 3px;">Autorizado</span>
+                  {% elif pedido.estado == 'ENTREGADO' or 'Entregado' in pedido.estado %}
+                    <span class="label label-success" style="background-color: #26B99A; color: white; padding: 4px 8px; border-radius: 3px;">Entregado</span>
+                  {% else %}
+                    <span class="label label-danger" style="background-color: #E74C3C; color: white; padding: 4px 8px; border-radius: 3px;">Rechazado</span>
+                  {% endif %}
+                </td>
+                <td class="text-center">
+                  <!-- Botón preparado para el Módulo del PDF -->
+                  <a href="{% url 'siaf_sincro:generar_pdf' pedido.id %}" target="_blank" class="btn btn-info btn-xs" title="Descargar Documento PDF">
+                    <i class="fa fa-file-pdf-o"></i> PDF
+                  </a>
+                </td>
+              </tr>
+              {% empty %}
+              <!-- Manejo por si el usuario entra directo y no tiene pedidos aún -->
+              {% endfor %}
+            </tbody>
+          </table>
+
+          <div class="ln_solid"></div>
+          <div>
+            <a href="{% url 'siaf_sincro:listado_items' %}" class="btn btn-primary">
+              <i class="fa fa-plus-circle"></i> Crear Nuevo Pedido
+            </a>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+  
+</div>
+{% endblock contenido %}
+
+{% block extrajs %}
+<!-- Dependencias locales de DataTables -->
+<script src="{% static 'vendors/datatables.net/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'vendors/datatables.net-bs/js/dataTables.bootstrap.min.js' %}"></script>
+<script src="{% static 'vendors/datatables.net-responsive/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'vendors/datatables.net-responsive-bs/js/responsive.bootstrap.min.js' %}"></script>
+
+<script>
+  $(document).ready(function() {
+    // Forzamos la paginación a 10 registros por defecto para el historial
+    if ($.fn.DataTable.isDataTable('#datatable')) {
+      var tabla = $('#datatable').DataTable();
+      tabla.page.len(10).draw();
+    }
+  });
+</script>
+{% endblock extrajs %}

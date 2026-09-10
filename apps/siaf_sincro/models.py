@@ -44,3 +44,77 @@ class ProductoSiaf(models.Model):
 
     def __str__(self):
         return f"[{self.tipo_almacen}] {self.codigo_siaf} - {self.nombre}"
+
+from django.contrib.auth.models import User
+# NOTA: No importamos ProductoSiaf porque ya existe arriba en este mismo archivo
+
+class PedidoAlmacen(models.Model):
+    ESTADO_CHOICES = [
+        ('PENDIENTE', 'Pendiente de Autorización'),
+        ('AUTORIZADO', 'Autorizado por Dirección/Admin'),
+        ('ENTREGADO', 'Entregado / Despachado (Almacén)'),
+        ('RECHAZADO', 'Rechazado'),
+    ]
+    
+    usuario = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Solicitante")
+    fecha_pedido = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de Solicitud")
+    justificacion = models.TextField(verbose_name="Justificación o Destino")
+    estado = models.CharField(max_length=40, choices=ESTADO_CHOICES, default='PENDIENTE', verbose_name="Estado")
+    codigo_pedido = models.CharField(max_length=20, unique=True, verbose_name="Nro. Pedido", editable=False)
+
+    class Meta:
+        verbose_name = "Pedido de Almacén"
+        verbose_name_plural = "Pedidos de Almacén"
+        ordering = ['-fecha_pedido']
+
+    def __str__(self):
+        return f"Pedido {self.codigo_pedido} - {self.usuario.username} ({self.get_estado_display()})"
+
+    def save(self, *args, **kwargs):
+        # 1. Generar código correlativo automático si es nuevo
+        if not self.codigo_pedido:
+            ultimo_pedido = PedidoAlmacen.objects.order_by('id').last()
+            if not ultimo_pedido:
+                self.codigo_pedido = 'PED-00001'
+            else:
+                nuevo_id = ultimo_pedido.id + 1
+                self.codigo_pedido = f'PED-{nuevo_id:05d}'
+        
+        # 2. Control del Stock: SOLO se descuenta cuando pasa a ENTREGADO
+        if self.pk:  
+            pedido_anterior = PedidoAlmacen.objects.get(pk=self.pk)
+            
+            # El almacenero cambia el estado a ENTREGADO (viniendo de PENDIENTE o AUTORIZADO)
+            if pedido_anterior.estado != 'ENTREGADO' and self.estado == 'ENTREGADO':
+                from django.db import transaction
+                with transaction.atomic():
+                    for detalle in self.detalles.all():
+                        producto = detalle.producto
+                        
+                        # Validamos que el Almacén Central tenga existencias reales en este instante
+                        if producto.stock_unidades < detalle.cantidad_solicitada:
+                            raise ValueError(
+                                f"No se puede despachar. Stock insuficiente en Almacén Central para: {producto.nombre}. "
+                                f"Disponible: {producto.stock_unidades}, Solicitado: {detalle.cantidad_solicitada}."
+                            )
+                        
+                        # Restamos el stock e impactamos la base de datos
+                        producto.stock_unidades -= detalle.cantidad_solicitada
+                        producto.save()
+
+        super().save(*args, **kwargs)
+
+
+
+class DetallePedido(models.Model):
+    pedido = models.ForeignKey(PedidoAlmacen, on_delete=models.CASCADE, related_name='detalles')
+    # Hacemos referencia directa a la clase que está arriba en el archivo
+    producto = models.ForeignKey(ProductoSiaf, on_delete=models.PROTECT, verbose_name="Producto SIAF")
+    cantidad_solicitada = models.PositiveIntegerField(verbose_name="Cantidad Solicitada")
+
+    class Meta:
+        verbose_name = "Detalle del Pedido"
+        verbose_name_plural = "Detalles del Pedido"
+
+    def __str__(self):
+        return f"{self.cantidad_solicitada} u. de {self.producto.nombre}"

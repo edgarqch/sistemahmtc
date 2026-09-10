@@ -1,0 +1,115 @@
+{% extends "index.html" %}
+{% load static %}
+
+{% block titulo %} Despacho de Pedidos {% endblock titulo %}
+
+{% block extracss %}
+<style>
+  .x_panel { margin-top: 10px; }
+  .panel-heading { background-color: #f5f7fa; padding: 10px 15px; border-radius: 4px; margin-bottom: 5px; border: 1px solid #e6e9ed; }
+  .panel-title a { font-size: 14px; font-weight: bold; color: #2A3F54; display: block; text-decoration: none; }
+  .tabla-detalle th { background-color: #2A3F54; color: white; font-size: 11px; padding: 6px; }
+  .tabla-detalle td { padding: 6px; font-size: 12px; }
+</style>
+{% endblock extracss %}
+
+{% block contenido %}
+<div class="">
+  <div class="page-title">
+    <div class="title_left">
+      <h3>{{ titulo_pagina }}</h3>
+    </div>
+  </div>
+  <div class="clearfix"></div>
+
+  <!-- Alertas del sistema -->
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+        <strong>Sistema:</strong> {{ message }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="row">
+    <div class="col-md-12 col-sm-12 col-xs-12">
+      <div class="x_panel">
+        <div class="x_title">
+          <h2>Pedidos Autorizados listos para Entrega Física <small>Almacén Central</small></h2>
+          <div class="clearfix"></div>
+        </div>
+        <div class="x_content">
+          <p class="text-muted font-13 m-b-30">
+            Haga clic en un pedido para verificar los ítems autorizados por Dirección. Una vez entregados los productos en físico, registre la salida para actualizar el stock.
+          </p>
+
+          <div class="accordion" id="accordion" role="tablist" aria-multiselectable="true">
+            {% for pedido in pedidos %}
+            <div class="panel">
+              <div class="panel-heading" role="tab" id="heading-{{ pedido.id }}">
+                <h4 class="panel-title">
+                  <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-{{ pedido.id }}" aria-expanded="false" aria-controls="collapse-{{ pedido.id }}">
+                    <i class="fa fa-chevron-down"></i> &nbsp; 
+                    <strong>{{ pedido.codigo_pedido }}</strong> &mdash; 
+                    Solicitante: {{ pedido.usuario.get_full_name|default:pedido.usuario.username }} &mdash; 
+                    <span class="label label-warning" style="background-color: #F39C12; font-size: 10px; color: white;">Autorizado</span>
+                  </a>
+                </h4>
+              </div>
+              
+              <div id="collapse-{{ pedido.id }}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading-{{ pedido.id }}">
+                <div class="panel-body" style="padding: 15px; border: 1px solid #e6e9ed; margin-bottom: 15px; background: #fff;">
+                  
+                  <div class="well well-sm" style="background-color: #f9f9f9; margin-bottom: 10px; font-size: 12px;">
+                    <strong>Destino / Justificación validada:</strong> "{{ pedido.justificacion }}"
+                  </div>
+
+                  <!-- Detalle de productos -->
+                  <table class="table table-bordered table-striped tabla-detalle">
+                    <thead>
+                      <tr>
+                        <th style="width: 20%;">Código SIAF</th>
+                        <th style="width: 50%;">Descripción del Artículo</th>
+                        <th style="width: 15%;" class="text-center">U. Medida</th>
+                        <th style="width: 15%;" class="text-center">Cant. Autorizada</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for detalle in pedido.detalles.all %}
+                      <tr>
+                        <td><strong>{{ detalle.producto.codigo_siaf }}</strong></td>
+                        <td>{{ detalle.producto.nombre }}</td>
+                        <td class="text-center"><span class="label label-default">{{ detalle.producto.unidad_medida }}</span></td>
+                        <td class="text-center" style="font-size: 13px;"><strong>{{ detalle.cantidad_solicitada }}</strong></td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+
+                  <!-- Acción final del Almacenero -->
+                  <div class="text-right" style="margin-top: 15px;">
+                    <form action="{% url 'siaf_sincro:procesar_entrega' pedido.id %}" method="POST" style="display: inline-block;">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('¿Confirmar que los productos ya fueron entregados físicamente y firmados? Esto descontará el stock.');">
+                        <i class="fa fa-truck"></i> Registrar Entrega Física y Sellar
+                      </button>
+                    </form>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+            {% empty %}
+            <div class="alert alert-info text-center" role="alert" style="margin-top: 20px;">
+              <i class="fa fa-info-circle"></i> No hay pedidos autorizados pendientes de entrega en este momento.
+            </div>
+            {% endfor %}
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock contenido %}

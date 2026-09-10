@@ -1,0 +1,78 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>SIAF/SICE - Inicio de Sesión</title>
+    <!-- Bootstrap -->
+    <link href="{% static 'vendors/bootstrap/dist/css/bootstrap.min.css' %}" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="{% static 'vendors/font-awesome/css/font-awesome.min.css' %}" rel="stylesheet">
+    <!-- NProgress -->
+    <link href="{% static 'vendors/nprogress/nprogress.css' %}" rel="stylesheet">
+    <!-- Animate.css -->
+    <link href="{% static 'vendors/animate.css/animate.min.css' %}" rel="stylesheet">
+    <!-- Custom Theme Style -->
+    <link href="{% static 'build/css/custom.min.css' %}" rel="stylesheet">
+    <style>
+        .login_wrapper { max-width: 400px; margin: 5% auto 0 auto; }
+        .login_content { text-shadow: none; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0px 4px 15px rgba(0,0,0,0.1); }
+        .hospital-brand { color: #2A3F54; font-weight: bold; margin-bottom: 20px; }
+    </style>
+</head>
+<body class="login">
+    <div>
+        <div class="login_wrapper">
+            <div class="animate form login_form">
+                <section class="login_content">
+                    
+                    <form method="POST" action="">
+                        {% csrf_token %}
+                        
+                        <h1 class="hospital-brand"><i class="fa fa-hospital-o"></i> HMTC</h1>
+                        <h2>SIH (Sistema Integral Hospitalario)</h2>
+                        <p class="text-muted">Inicie sesión con sus credenciales autorizadas</p>
+
+                        <!-- Manejo de Errores de Autenticación -->
+                        {% if form.errors %}
+                            <div class="alert alert-danger alert-dismissible text-left" role="alert">
+                                <i class="fa fa-excretion-triangle"></i> Usuario o contraseña incorrectos. Por favor, intente de nuevo.
+                            </div>
+                        {% endif %}
+
+                        <!-- Campo: Usuario -->
+                        <div class="form-group has-feedback">
+                            <input type="text" name="username" class="form-control" placeholder="Nombre de usuario" required="" id="id_username" />
+                            <span class="fa fa-user form-control-feedback left" aria-hidden="true" style="left: 15px;"></span>
+                        </div>
+
+                        <!-- Campo: Contraseña -->
+                        <div class="form-group has-feedback">
+                            <input type="password" name="password" class="form-control" placeholder="Contraseña" required="" id="id_password" />
+                            <span class="fa fa-lock form-control-feedback left" aria-hidden="true" style="left: 15px;"></span>
+                        </div>
+
+                        <!-- Botón de Envío -->
+                        <div>
+                            <button type="submit" class="btn btn-success btn-block" style="background-color: #26B99A; border-color: #169F85;">
+                                <i class="fa fa-sign-in"></i> Ingresar al Sistema
+                            </button>
+                        </div>
+
+                        <div class="clearfix"></div>
+
+                        <div class="separator">
+                            <div class="clearfix"></div>
+                            <br />
+                            <div>
+                                <p>©2026 Todos los Derechos Reservados.</p>
+                                <p style="font-size: 10px;" class="text-muted">Sincronización Activa SIAF / SICE</p>
+                            </div>
+                        </div>
+                    </form>
+                </section>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

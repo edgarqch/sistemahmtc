@@ -1,5 +1,5 @@
 from django.contrib import admin
-from apps.siaf_sincro.models import ProductoSiaf
+from apps.siaf_sincro.models import ProductoSiaf, PedidoAlmacen, DetallePedido
 
 @admin.register(ProductoSiaf)
 class ProductoSiafAdmin(admin.ModelAdmin):
@@ -17,3 +17,31 @@ class ProductoSiafAdmin(admin.ModelAdmin):
     
     # Hace que la fecha de actualización sea de solo lectura en el panel
     readonly_fields = ('actualizado_el',)
+
+
+# Configuramos un diseño inline para ver el desglose de artículos dentro del mismo pedido
+class DetallePedidoInline(admin.TabularInline):
+    model = DetallePedido
+    extra = 0  # No muestra filas vacías extras por defecto
+    readonly_fields = ['producto', 'cantidad_solicitada'] # Evita edición accidental
+    can_delete = False # Evita borrar detalles desde el admin para proteger la consistencia
+
+@admin.register(PedidoAlmacen)
+class PedidoAlmacenAdmin(admin.ModelAdmin):
+    # Columnas que se mostrarán en el listado general del admin
+    list_display = ('codigo_pedido', 'usuario', 'fecha_pedido', 'estado')
+    
+    # Filtros laterales convenientes
+    list_filter = ('estado', 'fecha_pedido')
+    
+    # Buscador superior por código de pedido o nombre de usuario
+    search_fields = ('codigo_pedido', 'usuario__username')
+    
+    # Hacemos el código de pedido de solo lectura
+    readonly_fields = ['codigo_pedido', 'fecha_pedido']
+    
+    # Incrustamos la tabla de artículos seleccionados abajo de la cabecera
+    inlines = [DetallePedidoInline]
+
+# NOTA: Si aún no habías registrado ProductoSiaf, puedes descomentar la siguiente línea:
+# admin.site.register(ProductoSiaf)

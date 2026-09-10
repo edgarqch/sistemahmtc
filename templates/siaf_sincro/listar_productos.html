@@ -1,0 +1,264 @@
+{% extends "index.html" %}
+{% load static %}
+
+{% block titulo %} Catálogo Almacén Central {% endblock titulo %}
+
+{% block extracss %}
+<link href="{% static 'vendors/datatables.net-bs/css/dataTables.bootstrap.min.css' %}" rel="stylesheet">
+<link href="{% static 'vendors/datatables.net-responsive-bs/css/responsive.bootstrap.min.css' %}" rel="stylesheet">
+<link href="{% static 'vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css' %}" rel="stylesheet">
+
+<style>
+  .x_panel { margin-top: 10px; margin-bottom: 15px; }
+  .dataTables_filter { text-align: right; }
+  .dataTables_paginate { text-align: right; }
+  
+  /* Estilo para el Botón Flotante del Carrito */
+  .btn-carrito-flotante {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    z-index: 9999;
+    border-radius: 50%;
+    width: 65px;
+    height: 65px;
+    font-size: 24px;
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
+    transition: transform 0.2s;
+  }
+  .btn-carrito-flotante:hover { transform: scale(1.1); }
+  .badge-carrito {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: #E74C3C !important;
+    font-size: 13px;
+    padding: 5px 8px;
+    border-radius: 50%;
+  }
+  .tabla-carrito th { background-color: #2A3F54; color: white; }
+</style>
+{% endblock extracss %}
+
+{% block contenido %}
+<div class="">
+  
+  <div class="page-title">
+    <div class="title_left">
+      <h3>{{ titulo_pagina }}</h3>
+    </div>
+  </div>
+
+  <div class="clearfix"></div>
+
+  <!-- SECCIÓN: CATÁLOGO DE PRODUCTOS -->
+  <div class="row">
+    <div class="col-md-12 col-sm-12 col-xs-12">
+      <div class="x_panel">
+        <div class="x_title">
+          <h2>Catálogo de Ítems Disponibles <small>SIAF / SICE</small></h2>
+          <div class="clearfix"></div>
+        </div>
+        <div class="x_content">
+          <table id="datatable" class="table table-striped table-bordered dt-responsive nowrap" cellspacing="0" width="100%">
+            <thead>
+              <tr>
+                <th style="width: 15%;">Código SIAF</th>
+                <th style="width: 45%;">Nombre del Producto</th>
+                <th style="width: 15%;">Unidad de Medida</th>
+                <th style="width: 10%;">Stock</th>
+                <th style="width: 15%;">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for producto in productos %}
+              <tr>
+                <td><strong>{{ producto.codigo_siaf }}</strong></td>
+                <td>{{ producto.nombre }}</td>
+                <td><span class="label label-default">{{ producto.unidad_medida }}</span></td>
+                <td>
+                  {% if producto.stock_unidades > 0 %}
+                    <span class="badge bg-green" style="background-color: #26B99A !important;">{{ producto.stock_unidades }}</span>
+                  {% else %}
+                    <span class="badge bg-red" style="background-color: #E74C3C !important;">{{ producto.stock_unidades }}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <button class="btn btn-primary btn-xs btn-agregar-carrito" 
+                          data-id="{{ producto.id }}" 
+                          data-codigo="{{ producto.codigo_siaf }}"
+                          data-nombre="{{ producto.nombre }}"
+                          data-unidad="{{ producto.unidad_medida }}"
+                          {% if producto.stock_unidades <= 0 %}disabled{% endif %}>
+                    <i class="fa fa-shopping-cart"></i> Añadir
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTÓN FLOTANTE DEL CARRITO -->
+<button type="button" class="btn btn-success btn-carrito-flotante" data-toggle="modal" data-target="#modalCarrito">
+  <i class="fa fa-shopping-cart"></i>
+  <span class="badge badge-carrito" id="contador-carrito">0</span>
+</button>
+
+<!-- VENTANA MODAL (CARRITO DE PEDIDOS) -->
+<div class="modal fade bs-example-modal-lg" id="modalCarrito" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      
+      <div class="modal-header" style="background-color: #2A3F54; color: white;">
+        <h4 class="modal-title" id="myModalLabel"><i class="fa fa-file-text"></i> Carrito de Pedido de Almacén</h4>
+        <button type="button" class="close" data-dismiss="modal" style="color: white; opacity: 1;"><span>×</span></button>
+      </div>
+      
+      <form id="form-pedido" method="POST" action="">
+        {% csrf_token %}
+        <div class="modal-body">
+          
+          <!-- Justificación -->
+          <div class="form-group">
+            <label for="justificacion"><strong>Justificación o Destino del Pedido:</strong></label>
+            <textarea class="form-control" id="justificacion" name="justificacion" rows="2" placeholder="Escriba el motivo del pedido o servicio destino (Ej: Emergencias)..." required></textarea>
+          </div>
+
+          <!-- Tabla del Carrito -->
+          <table class="table table-bordered table-striped table-condensed dataTable tabla-carrito" width="100%">
+            <thead>
+              <tr>
+                <th style="width: 15%;">Código</th>
+                <th style="width: 50%;">Descripción del Artículo</th>
+                <th style="width: 15%;">U. Medida</th>
+                <th style="width: 15%;">Cantidad</th>
+                <th style="width: 5%;">Quitar</th>
+              </tr>
+            </thead>
+            <tbody id="body-carrito">
+              <!-- Se rellena con JS -->
+            </tbody>
+          </table>
+          
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Seguir buscando</button>
+          <button type="submit" class="btn btn-success" id="btn-enviar-pedido" disabled>
+            <i class="fa fa-paper-plane"></i> Confirmar y Enviar Pedido
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+{% endblock contenido %}
+
+{% block extrajs %}
+<script src="{% static 'vendors/datatables.net/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'vendors/datatables.net-bs/js/dataTables.bootstrap.min.js' %}"></script>
+<script src="{% static 'vendors/datatables.net-responsive/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'vendors/datatables.net-responsive-bs/js/responsive.bootstrap.min.js' %}"></script>
+<script src="{% static 'vendors/datatables.net-scroller/js/dataTables.scroller.min.js' %}"></script>
+
+<script>
+  $(document).ready(function() {
+    // Inicializar DataTables superior
+    if ($.fn.DataTable.isDataTable('#datatable')) {
+      $('#datatable').DataTable().page.len(5).draw();
+    }
+
+    // Cargar carrito temporal desde el almacenamiento del navegador
+    var carrito = JSON.parse(localStorage.getItem('carrito_hmtc')) || [];
+
+    // Función para actualizar la interfaz visual del carrito
+    function actualizarInterfazCarrito() {
+      $('#contador-carrito').text(carrito.length);
+      var html = '';
+
+      if (carrito.length === 0) {
+        html = `<tr><td colspan="5" class="text-center text-muted">El carrito está vacío. Añade productos desde la tabla.</td></tr>`;
+        $('#btn-enviar-pedido').prop('disabled', true);
+      } else {
+        carrito.forEach(function(item) {
+          html += `
+            <tr id="fila-cart-${item.id}">
+              <td><strong>${item.codigo}</strong><input type="hidden" name="producto_id[]" value="${item.id}"></td>
+              <td>${item.nombre}</td>
+              <td><span class="label label-default">${item.unidad}</span></td>
+              <td>
+                <input type="number" class="form-control input-sm input-cantidad" data-id="${item.id}" name="cantidad[]" value="${item.cantidad}" min="1" style="width: 90px;" required>
+              </td>
+              <td class="text-center">
+                <button type="button" class="btn btn-danger btn-xs btn-quitar-cart" data-id="${item.id}">
+                  <i class="fa fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          `;
+        });
+        $('#btn-enviar-pedido').prop('disabled', false);
+      }
+      $('#body-carrito').html(html);
+      localStorage.setItem('carrito_hmtc', JSON.stringify(carrito));
+    }
+
+    // Lanzar actualización inicial al cargar la página
+    actualizarInterfazCarrito();
+
+    // ACCIÓN: AÑADIR AL CARRITO
+    $(document).on('click', '.btn-agregar-carrito', function() {
+      var id = $(this).data('id');
+      var codigo = $(this).data('codigo');
+      var nombre = $(this).data('nombre');
+      var unidad = $(this).data('unidad');
+
+      // Validar si ya existe
+      var existe = carrito.find(item => item.id === id);
+      if (existe) {
+        alert("Este producto ya está en tu carrito de pedidos.");
+        return;
+      }
+
+      // Insertar nuevo ítem con cantidad inicial 1
+      carrito.push({ id: id, codigo: codigo, nombre: nombre, unidad: unidad, cantidad: 1 });
+      actualizarInterfazCarrito();
+
+      // CORRECCIÓN: Guardamos la referencia estricta al botón de la tabla superior usando su ID '#datatable'
+      var botonCatalogo = $(`#datatable button[data-id="${id}"]`);
+
+      // Animación sutil de confirmación visual en el catálogo
+      botonCatalogo.html('<i class="fa fa-check"></i> Añadido').removeClass('btn-primary').addClass('btn-success').prop('disabled', true);
+      
+      setTimeout(() => {
+        botonCatalogo.html('<i class="fa fa-shopping-cart"></i> Añadir').removeClass('btn-success').addClass('btn-primary').prop('disabled', false);
+      }, 1000);
+    });
+
+
+    // ACCIÓN: MODIFICAR CANTIDADES DENTRO DEL CARRITO
+    $(document).on('input', '.input-cantidad', function() {
+      var id = $(this).data('id');
+      var nuevaCant = parseInt($(this).val()) || 1;
+      var item = carrito.find(item => item.id === id);
+      if (item) {
+        item.cantidad = nuevaCant;
+        localStorage.setItem('carrito_hmtc', JSON.stringify(carrito));
+      }
+    });
+
+    // ACCIÓN: QUITAR DEL CARRITO
+  $(document).on('click', '.btn-quitar-cart', function() {
+    var id = $(this).data('id');
+    carrito = carrito.filter(item => item.id !== id);
+    actualizarInterfazCarrito();});
+    // LIMPIAR LOCALSTORAGE CUANDO EL FORMULARIO SE ENVIE CON ÉXITO$
+  $('#form-pedido').on('submit', function() {
+    localStorage.removeItem('carrito_hmtc');});});
+</script>
+{% endblock extrajs %}
