@@ -106,7 +106,7 @@
         <tr>
             <td>
                 <span class="hospital-title">{{ hospital_nombre }}</span><br>
-                <span style="color: #777777; font-size: 9px;">Sistema de Sincronización de Catálogos SIAF / SICE</span>
+                <span style="color: #777777; font-size: 9px;">SIH - Sistema Integral Hospitalario</span>
             </td>
             <td class="document-title">
                 DOCUMENTO DE PEDIDO<br>
@@ -124,6 +124,11 @@
             <td>{{ pedido.fecha_pedido|date:"d/m/Y H:i" }}</td>
         </tr>
         <tr>
+            <!-- MUESTRA LA UNIDAD REAL O EL COMODÍN DE LOS PEDIDOS ANTIGUOS -->
+            <td><strong>Unidad Destino:</strong> {{ pedido.unidad.nombre|default:"Sin Especificar" }}</td>
+            <td><strong>Almacén:</strong> Almacén Central</td>
+        </tr>
+        <tr>
             <td class="label">Estado Actual:</td>
             <td><strong>{{ pedido.get_estado_display }}</strong></td>
             <td class="label">Almacén Origen:</td>
@@ -139,52 +144,74 @@
     <table class="content-table">
         <thead>
             <tr>
-                <th style="width: 15%;" class="text-center">Código SIAF</th>
-                <th style="width: 55%;">Descripción del Artículo</th>
-                <th style="width: 15%;" class="text-center">U. Medida</th>
-                <th style="width: 15%;" class="text-center">Cant. Solicitada</th>
+                <th>Código SIAF</th>
+                <th>Descripción</th>
+                <th>U. Medida</th>
+                <th>Cant. Solicitada</th>
+                <th>Cant. Entregada</th> <!-- Nueva columna -->
             </tr>
         </thead>
         <tbody>
             {% for detalle in detalles %}
             <tr>
-                <td class="text-center"><strong>{{ detalle.producto.codigo_siaf }}</strong></td>
+                <td>{{ detalle.producto.codigo_siaf }}</td>
                 <td>{{ detalle.producto.nombre }}</td>
-                <td class="text-center">{{ detalle.producto.unidad_medida }}</td>
-                <td class="text-center" style="font-size: 12px; font-weight: bold;">{{ detalle.cantidad_solicitada }}</td>
+                <td>{{ detalle.producto.unidad_medida }}</td>
+                <td style="text-align: center;">{{ detalle.cantidad_solicitada }}</td>
+                <td style="text-align: center; color: #0ac869;"><strong>{{ detalle.cantidad_despachada }}</strong></td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 
+
     <!-- Firmas Reguladoras -->
-        <!-- Sección de Firmas Reguladoras del Hospital Calcuta -->
-    <table class="firma-section" style="width: 100%; margin-top: 70px;">
+    <!-- Sección de Firmas Reguladoras del Hospital Calcuta -->
+    <!-- Nuevo Bloque de Firmas con Firma Digital Integrada -->
+    <table style="width: 100%; margin-top: 20px; table-layout: fixed;">
         <tr>
-            <!-- 1. El que solicita -->
-            <td class="firma-box" style="width: 30%; text-align: center; vertical-align: bottom;">
-                <div class="linea-firma"></div>
-                <strong>Firma del Solicitante</strong><br>
-                <span style="font-size: 9px; color: #555;">Sello de Unidad/Servicio</span>
+            <!-- 1. EL QUE AUTORIZA (DIGITAL) -->
+            <td style="width: 32%; text-align: center; vertical-align: bottom;">
+                {% if pedido.firma_hash %}
+                    <!-- Recuadro estético que simula el sello digital oficial del hospital -->
+                    <div style="border: 1.5px solid #169F85; background-color: #f4fbf9; padding: 6px; margin-bottom: 5px; border-radius: 4px; font-size: 8.5px; text-align: left;">
+                        <span style="color: #169F85; font-weight: bold; display: block; text-align: center; font-size: 9.5px; margin-bottom: 3px;">
+                            ✔ AUTORIZADO CON FIRMA DIGITAL
+                        </span>
+                        <!-- <strong>Por:</strong> {{ pedido.usuario_autoriza.first_name|default:pedido.usuario_autoriza.username }}<br> -->
+                         <strong>Por:</strong> {{ pedido.usuario_autoriza.get_full_name|default:pedido.usuario_autoriza.username }}<br>
+                        <strong>Usuario:</strong> {{ pedido.usuario.username }} <br>
+                        <strong>Fecha:</strong> {{ pedido.fecha_autorizacion|date:"d/m/Y H:i" }}<br>
+                        <span style="font-family: monospace; color: #555;"><strong>ID-USUARIO:</strong> {{ pedido.firma_hash }}</span>
+                    </div>
+                {% else %}
+                    <div style="height: 20px;"></div>
+                    <div class="linea-firma"></div>
+                {% endif %}
+                <strong>Autorizado por (Vo.Bo.)</strong>
             </td>
-            <td style="width: 5%;"></td>
             
-            <!-- 2. El que autoriza (Director o Administrador) -->
-            <td class="firma-box" style="width: 30%; text-align: center; vertical-align: bottom;">
+            <td style="width: 2%;"></td> <!-- Espaciador -->
+
+            <!-- 2. EL ALMACENERO (FÍSICO) -->
+            <td style="width: 32%; text-align: center; vertical-align: bottom;">
+                <div style="height: 65px;"></div> <!-- Espacio para el sello físico de la bodega -->
                 <div class="linea-firma"></div>
-                <strong>Vo.Bo. Dirección / Admin.</strong><br>
-                <span style="font-size: 9px; color: #555;">Firma y Sello de Autorización</span>
+                <strong>Entregado por Almacén</strong>
             </td>
-            <td style="width: 5%;"></td>
             
-            <!-- 3. El que entrega los productos físicos -->
-            <td class="firma-box" style="width: 30%; text-align: center; vertical-align: bottom;">
+            <td style="width: 2%;"></td> <!-- Espaciador -->
+
+            <!-- 3. EL SOLICITANTE / RECEPCIÓN (FÍSICO) -->
+            <td style="width: 32%; text-align: center; vertical-align: bottom;">
+                <div style="height: 65px;"></div> <!-- Espacio para la firma manuscrita de quien recibe en el piso -->
                 <div class="linea-firma"></div>
-                <strong>Entregado por Almacén</strong><br>
-                <span style="font-size: 9px; color: #555;">Firma y Sello Responsable</span>
+                <strong>Recibí Conforme (Solicitante)</strong>
+                <br><span style="font-size: 8.5px; color: #73879C;">{{ pedido.usuario.first_name }}</span>
             </td>
         </tr>
     </table>
+
 
 
     <!-- Paginador compatible con Python 3.12 usando tags nativos de xhtml2pdf -->

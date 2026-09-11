@@ -78,9 +78,9 @@
                 <td><span class="label label-default">{{ producto.unidad_medida }}</span></td>
                 <td>
                   {% if producto.stock_unidades > 0 %}
-                    <span class="badge bg-green" style="background-color: #26B99A !important;">{{ producto.stock_unidades }}</span>
+                    <span class="badge bg-green" style="background-color: #26B99A !important; font-size: 14px; padding: 6px 10px;">{{ producto.stock_unidades }}</span>
                   {% else %}
-                    <span class="badge bg-red" style="background-color: #E74C3C !important;">{{ producto.stock_unidades }}</span>
+                    <span class="badge bg-red" style="background-color: #E74C3C !important; font-size: 14px; padding: 6px 10px;">{{ producto.stock_unidades }}</span>
                   {% endif %}
                 </td>
                 <td>
@@ -122,7 +122,15 @@
       <form id="form-pedido" method="POST" action="">
         {% csrf_token %}
         <div class="modal-body">
-          
+          <div class="form-group">
+            <label for="unidad_id"><strong>Unidad o Servicio que Solicita:</strong></label>
+            <select class="form-control" id="unidad_id" name="unidad_id" required>
+                <option value="" disabled selected>-- Seleccione la Unidad Médica Destino --</option>
+                {% for unidad in unidades %}
+                    <option value="{{ unidad.id }}">{{ unidad.nombre }}</option>
+                {% endfor %}
+            </select>
+          </div>
           <!-- Justificación -->
           <div class="form-group">
             <label for="justificacion"><strong>Justificación o Destino del Pedido:</strong></label>

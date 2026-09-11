@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 class ProductoSiaf(models.Model):
     # Opciones para clasificar los almacenes a futuro
@@ -45,6 +46,19 @@ class ProductoSiaf(models.Model):
     def __str__(self):
         return f"[{self.tipo_almacen}] {self.codigo_siaf} - {self.nombre}"
 
+# 1. NUEVA TABLA MAESTRA DE UNIDADES DEL HOSPITAL
+class UnidadHospitalaria(models.Model):
+    nombre = models.CharField(max_length=100, unique=True, verbose_name="Nombre de la Unidad/Servicio")
+    codigo_interno = models.CharField(max_length=20, unique=True, null=True, blank=True, verbose_name="Código Interno (Opcional)")
+
+    class Meta:
+        verbose_name = "Unidad Hospitalaria"
+        verbose_name_plural = "Unidades Hospitalarias"
+        ordering = ['nombre']
+
+    def __str__(self):
+        return self.nombre
+
 from django.contrib.auth.models import User
 # NOTA: No importamos ProductoSiaf porque ya existe arriba en este mismo archivo
 
@@ -61,6 +75,24 @@ class PedidoAlmacen(models.Model):
     justificacion = models.TextField(verbose_name="Justificación o Destino")
     estado = models.CharField(max_length=40, choices=ESTADO_CHOICES, default='PENDIENTE', verbose_name="Estado")
     codigo_pedido = models.CharField(max_length=20, unique=True, verbose_name="Nro. Pedido", editable=False)
+    usuario_autoriza = models.ForeignKey(
+        User, 
+        on_delete=models.PROTECT, 
+        null=True, 
+        blank=True, 
+        related_name="pedidos_autorizados", 
+        verbose_name="Autorizado por"
+    )
+    fecha_autorizacion = models.DateTimeField(null=True, blank=True, verbose_name="Fecha de Autorización")
+    firma_hash = models.CharField(max_length=64, null=True, blank=True, verbose_name="Token Digital de Seguridad")
+    unidad = models.ForeignKey(
+        UnidadHospitalaria, 
+        on_delete=models.PROTECT, 
+        null=True, 
+        blank=True, 
+        related_name="pedidos",
+        verbose_name="Unidad Solicitante"
+    )
 
     class Meta:
         verbose_name = "Pedido de Almacén"
@@ -71,50 +103,48 @@ class PedidoAlmacen(models.Model):
         return f"Pedido {self.codigo_pedido} - {self.usuario.username} ({self.get_estado_display()})"
 
     def save(self, *args, **kwargs):
-        # 1. Generar código correlativo automático si es nuevo
         if not self.codigo_pedido:
             ultimo_pedido = PedidoAlmacen.objects.order_by('id').last()
-            if not ultimo_pedido:
-                self.codigo_pedido = 'PED-00001'
-            else:
-                nuevo_id = ultimo_pedido.id + 1
-                self.codigo_pedido = f'PED-{nuevo_id:05d}'
+            self.codigo_pedido = 'PED-00001' if not ultimo_pedido else f'PED-{(ultimo_pedido.id + 1):05d}'
         
-        # 2. Control del Stock: SOLO se descuenta cuando pasa a ENTREGADO
         if self.pk:  
             pedido_anterior = PedidoAlmacen.objects.get(pk=self.pk)
             
-            # El almacenero cambia el estado a ENTREGADO (viniendo de PENDIENTE o AUTORIZADO)
+            # El stock SOLO se descuenta cuando el estado cambia a ENTREGADO
             if pedido_anterior.estado != 'ENTREGADO' and self.estado == 'ENTREGADO':
                 from django.db import transaction
                 with transaction.atomic():
                     for detalle in self.detalles.all():
                         producto = detalle.producto
                         
-                        # Validamos que el Almacén Central tenga existencias reales en este instante
-                        if producto.stock_unidades < detalle.cantidad_solicitada:
+                        # ⚠️ CAMBIO CLAVE: Ahora validamos y descontamos la CANTIDAD DESPACHADA
+                        if producto.stock_unidades < detalle.cantidad_despachada:
                             raise ValueError(
                                 f"No se puede despachar. Stock insuficiente en Almacén Central para: {producto.nombre}. "
-                                f"Disponible: {producto.stock_unidades}, Solicitado: {detalle.cantidad_solicitada}."
+                                f"Disponible: {producto.stock_unidades}, A entregar: {detalle.cantidad_despachada}."
                             )
                         
-                        # Restamos el stock e impactamos la base de datos
-                        producto.stock_unidades -= detalle.cantidad_solicitada
+                        # Deducción atómica basándose en lo que realmente sale
+                        producto.stock_unidades -= detalle.cantidad_despachada
                         producto.save()
-
+                        
         super().save(*args, **kwargs)
 
 
 
 class DetallePedido(models.Model):
     pedido = models.ForeignKey(PedidoAlmacen, on_delete=models.CASCADE, related_name='detalles')
-    # Hacemos referencia directa a la clase que está arriba en el archivo
     producto = models.ForeignKey(ProductoSiaf, on_delete=models.PROTECT, verbose_name="Producto SIAF")
     cantidad_solicitada = models.PositiveIntegerField(verbose_name="Cantidad Solicitada")
+    
+    # 💡 NUEVO CAMPO: Guardará lo que el almacenero decida entregar realmente
+    cantidad_despachada = models.PositiveIntegerField(verbose_name="Cantidad Despachada", null=True, blank=True)
 
-    class Meta:
-        verbose_name = "Detalle del Pedido"
-        verbose_name_plural = "Detalles del Pedido"
+    def save(self, *args, **kwargs):
+        # Si no se define una cantidad despachada, por defecto es igual a la solicitada
+        if self.cantidad_despachada is None:
+            self.cantidad_despachada = self.cantidad_solicitada
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.cantidad_solicitada} u. de {self.producto.nombre}"
+        return f"{self.cantidad_solicitada} u. (Despachadas: {self.cantidad_despachada}) de {self.producto.nombre}"
