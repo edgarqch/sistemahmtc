@@ -8,47 +8,57 @@ class Command(BaseCommand):
     help = "Lee el archivo CSV exportado de BDAdmin e importa/actualiza los usuarios en Django"
 
     def handle(self, *args, **options):
-        # Ruta estándar donde se genera el archivo plano desde Windows
-        file_path = r"C:\Users\Usuario\Documents\usuarios_siaf.csv"
+        # 📂 Ruta Oficial de Producción en el Servidor Linux (Montaje SMB)
+        ruta_servidor = r"/mnt/siaf_compartido/usuarios_siaf.csv"
+        
+        # 🏠 Ruta de Respaldo Local (Entorno de desarrollo en Windows)
+        ruta_desarrollo = r"C:\Users\Usuario\Documents\usuarios_siaf.csv"
+        
+        # Selección inteligente de ruta según el entorno operativo
+        if os.path.exists(ruta_servidor):
+            file_path = ruta_servidor
+        elif os.path.exists(ruta_desarrollo):
+            file_path = ruta_desarrollo
+        else:
+            raise CommandError(
+                f"Crítico: El archivo CSV de usuarios no fue encontrado en la ruta oficial ({ruta_servidor}) "
+                f"ni en la ruta local de desarrollo ({ruta_desarrollo})."
+            )
 
-        if not os.path.exists(file_path):
-            raise CommandError(f"El archivo CSV de usuarios no fue encontrado en la ruta: {file_path}")
-
-        self.stdout.write(self.style.NOTICE(f"Iniciando procesamiento de usuarios SIAF: {file_path}"))
-
+        self.stdout.write(self.style.NOTICE(f"Iniciando procesamiento de usuarios SIAF desde: {file_path}"))
+        
         try:
             with open(file_path, mode='r', encoding='utf-8', errors='ignore') as csv_file:
                 reader = csv.reader(csv_file, delimiter=';')
                 creados = 0
                 actualizados = 0
-
-                # Envolvemos todo el bucle en una transacción atómica de PostgreSQL
+                
+                # Bloque transaccional atómico para asegurar consistencia absoluta en PostgreSQL
                 with transaction.atomic():
                     for row in reader:
                         if len(row) < 3:
                             continue
-
-                        # Limpiamos las comillas y espacios de los extremos
+                        
+                        # Limpieza perimetral de espacios y comillas encapsuladas por el volcado del BCP
                         username = row[0].strip().replace('"', '').lower()
                         nombre_completo = row[1].strip().replace('"', '')
                         estado_vigente = row[2].strip().replace('"', '')
-
+                        
                         if not username or not nombre_completo:
                             continue
-
-                        # Buscamos si el usuario ya existe para no resetear contraseñas existentes
+                        
                         usuario_existe = User.objects.filter(username=username).exists()
-
+                        
                         if not usuario_existe:
-                            # 1. CASO USUARIO NUEVO: Se crea con contraseña temporal igual al username
+                            # Creación segura de nueva cuenta con clave provisional
                             user = User.objects.create_user(
                                 username=username,
-                                first_name=nombre_completo[:150],  # Límite nativo del campo en Django
+                                first_name=nombre_completo[:150],
                                 is_active=True
                             )
-                            user.set_password(username)  # Contraseña provisional = username
+                            user.set_password(username) # Contraseña temporal = username
                             
-                            # Tratamiento especial de superusuario para tu cuenta 'hmtc'
+                            # Cuenta maestra de TI conserva privilegios globales administrativos
                             if username == 'hmtc':
                                 user.is_staff = True
                                 user.is_superuser = True
@@ -56,29 +66,28 @@ class Command(BaseCommand):
                             user.save()
                             creados += 1
                         else:
-                            # 2. CASO USUARIO EXISTENTE: Solo actualizamos datos informativos
+                            # Sincronización y actualización de cuentas existentes
                             user = User.objects.get(username=username)
                             user.first_name = nombre_completo[:150]
                             
-                            # Si en SQL Server pasa a no vigente, lo desactivamos en Django (excepto hmtc)
+                            # Purgar accesos de ex-empleados basándose en el estado de vigencia de Windows
                             if estado_vigente != 'S' and username != 'hmtc':
                                 user.is_active = False
                             else:
                                 user.is_active = True
                                 
-                            # Si es hmtc, nos aseguramos que mantenga siempre sus credenciales de TI
                             if username == 'hmtc':
                                 user.is_staff = True
                                 user.is_superuser = True
-
+                            
                             user.save()
                             actualizados += 1
-
+                            
                 self.stdout.write(self.style.SUCCESS(
                     f"Sincronización de usuarios finalizada con éxito.\n"
                     f"-> Cuentas NUEVAS Creadas (Clave Temporal Activada): {creados}\n"
                     f"-> Cuentas EXISTENTES Sincronizadas: {actualizados}"
                 ))
-
         except Exception as e:
             raise CommandError(f"Error crítico durante la importación de usuarios: {str(e)}")
+
