@@ -2,208 +2,340 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="es">
-  <head>
+<head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <!-- Meta, title, CSS, favicons, etc. -->
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-	<link rel="icon" href="{% static 'images/logohmtc.png' %}" type="image/ico" />
-    <title>{% block titulo %} Inicio {% endblock titulo %}</title>
-    <!-- Bootstrap -->
+
+    <title>{% block titulo %} Inicio {% endblock titulo %} | Hospital Calcuta</title>
+
+    <!-- Hojas de estilo estándar de Gentelella -->
     <link href="{% static 'vendors/bootstrap/dist/css/bootstrap.min.css' %}" rel="stylesheet">
-    <!-- Font Awesome -->
     <link href="{% static 'vendors/font-awesome/css/font-awesome.min.css' %}" rel="stylesheet">
-    <!-- NProgress -->
     <link href="{% static 'vendors/nprogress/nprogress.css' %}" rel="stylesheet">
-    <!-- iCheck -->
-    <link href="{% static 'vendors/iCheck/skins/flat/green.css' %}" rel="stylesheet">
-    <!-- bootstrap-progressbar -->
-    <link href="{% static 'vendors/bootstrap-progressbar/css/bootstrap-progressbar-3.3.4.min.css' %}" rel="stylesheet">
-    <!-- JQVMap -->
-    <link href="{% static 'vendors/jqvmap/dist/jqvmap.min.css' %}" rel="stylesheet"/>
-    <!-- bootstrap-daterangepicker -->
-    <link href="{% static 'vendors/bootstrap-daterangepicker/daterangepicker.css' %}" rel="stylesheet">
-    <!-- Custom Theme Style -->
     <link href="{% static 'build/css/custom.min.css' %}" rel="stylesheet">
-    {% block extracss %}
+    
+    {% block extracss %} {% endblock extracss %}
+</head>
 
-
-    {% endblock extracss %}
-  </head>
-  <body class="nav-md">
+<body class="nav-md">
     <div class="container body">
-      <div class="main_container">
-        <div class="col-md-3 left_col">
-          <div class="left_col scroll-view">
-            <div class="navbar nav_title" style="border: 0;">
-              <a href="{% url 'siaf_sincro:inicio' %}" class="site_title"><i class="fa fa-hospital-o"></i> <span>Hospital Calcuta</span></a>
-            </div>
-            <div class="clearfix"></div>
-            <!-- menu profile quick info -->
-            <div class="profile clearfix">
-              <div class="profile_info">
-                <span>Bienvenido,</span>
-                <h2>Usuario</h2>
-              </div>
-            </div>
-            <!-- /menu profile quick info -->
-            <br />
-            <!-- sidebar menu -->
-            <div id="sidebar-menu" class="main_menu_side hidden-print main_menu">
-              <div class="menu_section">
-                <h3>Menú General</h3>
-                <ul class="nav side-menu">
-                  <li><a><i class="fa fa-file-text"></i> Instrumentos HMTC <span class="fa fa-chevron-down"></span></a>
-                    <ul class="nav child_menu">
-                      <!-- sidebar menu opciones
-                      <li><a href="{% url 'biblioteca:crear_autor' %}">Registrar Autor</a></li>
-                      <li><a href="{% url 'biblioteca:listar_autor' %}">Lista de Autores</a></li>
-                      <li><a href="{% url 'biblioteca:crear_instrumento' %}">Subir Instrumentos</a></li>
-                      -->
-                      <li><a href="{% url 'biblioteca:listar_instrumento' %}">Instrumentos</a></li>
-                    </ul>
-                  </li>
-                  <li><a><i class="fa fa-truck"></i> Almacen General <span class="fa fa-chevron-down"></span></a>
-                    <ul class="nav child_menu">
-                      {% if request.user|tiene_rol:"Solicitantes_Almacen" %}
-                      <li><a href="{% url 'siaf_sincro:listado_items' %}">Lista de Items</a></li>
-                      <li><a href="{% url 'siaf_sincro:historial_pedidos' %}">Pedidos</a></li>
-                      {% endif %}
-                      {% if request.user|tiene_rol:"Aprobadores_Almacen" %}
-                      <li><a href="{% url 'siaf_sincro:listado_autorizaciones' %}">Autorización</a></li>
-                      {% endif %}
-                      {% if request.user|tiene_rol:"Almaceneros_Almacen" %}
-                      <li><a href="{% url 'siaf_sincro:listado_despachos' %}">Lista Despachos</a></li>
-                      {% endif %}
-                    </ul>
-                  </li>
-                </ul>
-              </div>
-            </div>
-            <!-- /sidebar menu -->
-            <!-- /menu footer buttons -->            
-            <div class="sidebar-footer hidden-small">
-              <a data-toggle="tooltip" data-placement="top" title="Settings">
-                <span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
-              </a>
-              <a data-toggle="tooltip" data-placement="top" title="FullScreen">
-                <span class="glyphicon glyphicon-fullscreen" aria-hidden="true"></span>
-              </a>
-              <a data-toggle="tooltip" data-placement="top" title="Lock">
-                <span class="glyphicon glyphicon-eye-close" aria-hidden="true"></span>
-              </a>
-              <a data-toggle="tooltip" data-placement="top" title="Logout" href="javascript:void(0);" onclick="document.getElementById('logout-form').submit();">
-                <span class="glyphicon glyphicon-off" aria-hidden="true"></span>
-              </a>
-            </div>
-            <!-- /menu footer buttons -->
-          </div>
-        </div>
-        <!-- top navigation -->
-        <div class="top_nav">
-          <div class="nav_menu">
-              <div class="nav toggle">
-                <a id="menu_toggle"><i class="fa fa-bars"></i></a>
-              </div>
-              <nav class="nav navbar-nav">
-              <ul class=" navbar-right">
-                <li class="nav-item dropdown open" style="padding-left: 15px;">
-                  <a href="javascript:;" class="user-profile dropdown-toggle" aria-haspopup="true" id="navbarDropdown" data-toggle="dropdown" aria-expanded="false">
-                    <img src="{% static 'images/user1.jpg' %}" alt="">Usuario
-                  </a>
-                  <div class="dropdown-menu dropdown-usermenu pull-right" aria-labelledby="navbarDropdown">
-                    <a class="dropdown-item"  href="javascript:;"> Perfil</a>
-                      <a class="dropdown-item"  href="javascript:;">
-                        <span class="badge bg-red pull-right">50%</span>
-                        <span>Configuraciones</span>
-                      </a>
-                    <a class="dropdown-item"  href="javascript:;">Ayuda</a>
-                    <form id="logout-form" action="{% url 'logout' %}" method="POST" style="display: none;">
-                      {% csrf_token %}
-                    </form>
-                    <a class="dropdown-item"  href="javascript:void(0);" onclick="document.getElementById('logout-form').submit();">
-                      <i class="fa fa-sign-out pull-right"></i> Cerrar Sesión
-                    </a>
-                  </div>
-                </li>
-              </ul>
-            </nav>
-          </div>
-        </div>
-        <!-- /top navigation -->
-        <!-- page content -->
-        <div class="right_col" role="main">
-          {% block contenido %}
-          <div class="">
-            <div class="page-title">
-              <div class="title_center">
-                <h1 style="text-align: center;">HOSPITAL MADRE TERESA DE CALCUTA</h1>
-              </div>
-              <div style="text-align: center;">
-                <img src="{% static 'images/calcuta1.jpg' %}" alt="HMTC" width="60%" height="80%">             
-              <!-- /poner imagen del hospital -->
-              </div>
-            </div>
-          </div>
-          {% endblock contenido %}
-        </div>
-          <!-- /page content -->
+        <div class="main_container">
+            
+            <!-- 📂 BARRA LATERAL IZQUIERDA (Gentelella Sidebar) -->
+            <div class="col-md-3 left_col menu_fixed">
+                <div class="left_col scroll-view">
+                    <div class="navbar nav_title" style="border: 0;">
+                        <a href="#" class="site_title">
+                            <i class="fa fa-hospital-o"></i> <span>HMTC Calcuta</span>
+                        </a>
+                    </div>
 
-          <!-- footer content -->
-          <footer>
-            <div class="pull-right">
-              Copyright © 2024 All rights reserved Hospital Calcuta <a href="https://www.facebook.com/profile.php?id=100063953266061&mibextid=ZbWKwL">Facebook</a>
+                    <div class="clearfix"></div>
+
+                    <!-- Perfil rápido en la barra lateral -->
+                    <div class="profile clearfix">
+                        <div class="profile_pic">
+                            <div class="img-circle profile_img" style="background: #2A3F54; display: flex; align-items: center; justify-content: center; height: 56px; width: 56px; border: 1px solid rgba(255,255,255,0.15); margin-left: 15px;">
+                                <i class="fa fa-user-md" style="font-size: 28px; color: #EDEDED;"></i>
+                            </div>
+                        </div>
+                        <div class="profile_info">
+                            <span>Bienvenido,</span>
+                            <h2>{{ request.user.username|default:"Usuario" }}</h2>
+                        </div>
+                    </div>
+
+                    <br />
+
+                    <!-- Menú de Navegación Lateral -->
+                    <div id="sidebar-menu" class="main_menu_side hidden-print main_menu">
+                        <div class="menu_section">
+                            <h3>Menú General</h3>
+                            <ul class="nav side-menu">
+                                
+                                <!-- Módulo: Instrumentos -->
+                                <li><a><i class="fa fa-file-text-o"></i> Instrumentos HMTC <span class="fa fa-chevron-down"></span></a>
+                                    <ul class="nav child_menu">
+                                        <li><a href="{% url 'biblioteca:listar_instrumento' %}">Lista de Instrumentos</a></li>
+                                        <!--<li><a href="{% url 'biblioteca:listar_autor' %}">Autores</a></li> -->
+                                    </ul>
+                                </li>
+
+                                <!-- Módulo: Almacén General (Filtrado por Roles) -->
+                                <li><a><i class="fa fa-cubes"></i> Almacén General <span class="fa fa-chevron-down"></span></a>
+                                    <ul class="nav child_menu">
+                                        {% if request.user|tiene_rol:"Solicitantes_Almacen" %}
+                                        <li><a href="{% url 'siaf_sincro:listado_items' %}">Lista de Ítems</a></li>
+                                        <li><a href="{% url 'siaf_sincro:historial_pedidos' %}">Pedidos</a></li>
+                                        {% endif %}
+                                        
+                                        {% if request.user|tiene_rol:"Aprobadores_Almacen" %}
+                                        <li><a href="{% url 'siaf_sincro:listado_autorizaciones' %}">Autorización</a></li>
+                                        {% endif %}
+                                        
+                                        {% if request.user|tiene_rol:"Almaceneros_Almacen" %}
+                                        <li><a href="{% url 'siaf_sincro:listado_despachos' %}">Lista Despachos</a></li>
+                                        {% endif %}
+                                    </ul>
+                                </li>
+
+                                <!-- Módulo: Ajustes -->
+                                <li><a><i class="fa fa-gears"></i> Configuración <span class="fa fa-chevron-down"></span></a>
+                                    <ul class="nav child_menu">
+                                        <li><a href="#">Mi Perfil</a></li>
+                                        <li><a href="#">Ayuda</a></li>
+                                    </ul>
+                                </li>
+
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="clearfix"></div>
-          </footer>
-          <!-- /footer content -->
+
+            <!-- 📌 BARRA DE NAVEGACIÓN SUPERIOR (Gentelella Top Nav) -->
+            <div class="top_nav">
+                <div class="nav_menu">
+                    <div class="nav toggle">
+                        <a id="menu_toggle"><i class="fa fa-bars"></i></a>
+                    </div>
+                    <nav class="nav navbar-nav">
+                        <ul class=" navbar-right">
+                            <li class="nav-item dropdown open" style="padding-left: 15px;">
+                                <a href="javascript:;" class="user-profile dropdown-toggle" aria-haspopup="true" id="navbarDropdown" data-toggle="dropdown" aria-expanded="false">
+                                    <i class="fa fa-user-md m-r-xs"></i> {{ request.user.username|default:"Usuario" }}
+                                </a>
+                                <div class="dropdown-menu dropdown-usermenu pull-right" aria-labelledby="navbarDropdown">
+                                    <a class="dropdown-item" href="#"> Perfil</a>
+                                    <a class="dropdown-item" href="#"> Configuraciones</a>
+                                    
+                                    <!-- Formulario seguro de cierre de sesión -->
+                                    <form action="{% url 'logout' %}" method="POST" id="logout-form" style="display: none;">
+                                        {% csrf_token %}
+                                    </form>
+                                    <a class="dropdown-item" href="javascript:;" onclick="document.getElementById('logout-form').submit();">
+                                        <i class="fa fa-sign-out pull-right"></i> Cerrar Sesión
+                                    </a>
+                                </div>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- 🖥️ ÁREA DE CONTENIDO CENTRAL (Gentelella Right Col) -->
+            <div class="right_col" role="main">
+                <div class="">
+                    <div class="page-title">
+                        <div class="title_left">
+                            <h3>HOSPITAL MADRE TERESA DE CALCUTA <small>HMTC</small></h3>
+                        </div>
+                    </div>
+
+                    <div class="clearfix"></div>
+
+                    <div class="row">
+                        <div class="col-md-12 col-sm-12 col-xs-12">
+                            <div class="x_panel" style="min-height: 500px;">
+                                <div class="x_title">
+                                    <h2>Panel de Gestión General</h2>
+                                    <div class="clearfix"></div>
+                                </div>
+                                <div class="x_content">
+                                    
+                                {% block contenido %}
+                                <!-- 📊 CONTADORES DE ESTADÍSTICAS RÁPIDAS (Gentelella Tile Stats) -->
+                                <div class="row" style="display: inline-block; width: 100%;">
+                                    <div class="tile_count" style="margin-bottom: 20px;">
+                                        
+                                        <!-- Tarjeta 1: Total Instrumentos -->
+                                        <div class="col-md-3 col-sm-6 tile_stats_count">
+                                            <span class="count_top"><i class="fa fa-file-text blue"></i> Total Documentos</span>
+                                            <div class="count blue">{{ total_instrumentos }}</div>
+                                            <span class="count_bottom"><i class="green"><i class="fa fa-check"></i> Activos </i> en biblioteca</span>
+                                        </div>
+
+                                        <!-- Tarjeta 2: Autores Registrados -->
+                                        <div class="col-md-3 col-sm-6 tile_stats_count">
+                                            <span class="count_top"><i class="fa fa-user text-success"></i> Autores Activos</span>
+                                            <div class="count font-weight-bold" style="color: #2A3F54;">{{ total_autores }}</div>
+                                            <span class="count_bottom"><i class="green"><i class="fa fa-users"></i> Personal </i> del hospital</span>
+                                        </div>
+
+                                        <!-- Tarjeta 3: Pedidos Almacén -->
+                                        <div class="col-md-3 col-sm-6 tile_stats_count">
+                                            <span class="count_top"><i class="fa fa-shopping-cart text-warning"></i> Pedidos de Almacén</span>
+                                            <div class="count orange" style="color: #F39C12;">{{ total_pedidos }}</div>
+                                            <span class="count_bottom"><i class="orange"><i class="fa fa-clock-o"></i> Solicitudes </i> históricas</span>
+                                        </div>
+
+                                        <!-- Tarjeta 4: Despachos Realizados -->
+                                        <div class="col-md-3 col-sm-6 tile_stats_count">
+                                            <span class="count_top"><i class="fa fa-truck text-info"></i> Despachos Realizados</span>
+                                            <div class="count green" style="color: #26B99A;">{{ total_despachos }}</div>
+                                            <span class="count_bottom"><i class="green"><i class="fa fa-check-circle"></i> Entregados </i> exitosamente</span>
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <!-- /Fin Contadores -->
+
+                                <div class="row">
+                                    <!-- 📄 SECCIÓN CENTRAL: ÚLTIMAS PUBLICACIONES REALES -->
+                                    <div class="col-md-8 col-sm-12">
+                                        <div class="x_panel">
+                                            <div class="x_title">
+                                                <h2>Últimos Documentos e Instrumentos Publicados</h2>
+                                                <div class="clearfix"></div>
+                                            </div>
+                                            <div class="x_content">
+                                                <p class="text-muted">A continuación se muestran las normativas, guías y reglamentos del hospital cargados recientemente al sistema.</p>
+                                                
+                                                <table class="table table-striped projects">
+                                                    <thead>
+                                                        <tr>
+                                                            <th style="width: 5%">#</th>
+                                                            <th style="width: 50%">Nombre del Documento</th>
+                                                            <th>Autor</th>
+                                                            <th>Estado</th>
+                                                            <th style="width: 15%">Acción</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for inst in ultimos_instrumentos %}
+                                                        <tr>
+                                                            <td>{{ forloop.counter }}</td>
+                                                            <td>
+                                                                <a><strong>{{ inst.nombre|default:"Documento sin nombre" }}</strong></a>
+                                                                <br/>
+                                                                <small>Código / Ref identificatoria</small>
+                                                            </td>
+                                                            <td>{{ inst.autor.nombre }} {{ inst.autor.apellidos }}</td>
+                                                            <td>
+                                                                <span class="badge badge-success" style="background-color: #26B99A; padding: 5px 10px;">Vigente</span>
+                                                            </td>
+                                                            <td>
+                                                                <a href="{% url 'biblioteca:listar_instrumento' %}" class="btn btn-primary btn-xs"><i class="fa fa-eye"></i> Ver</a>
+                                                            </td>
+                                                        </tr>
+                                                        {% empty %}
+                                                        <tr>
+                                                            <td colspan="5" class="text-center text-muted" style="padding: 20px;">No hay documentos registrados actualmente.</td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 📊 SECCIÓN LATERAL: GRÁFICO DINÁMICO DE ALMACÉN -->
+                                    <div class="col-md-4 col-sm-12">
+                                        <div class="x_panel">
+                                            <div class="x_title">
+                                                <h2>Flujo de Pedidos</h2>
+                                                <div class="clearfix"></div>
+                                            </div>
+                                            <div class="x_content">
+                                                <p class="text-muted text-center" style="font-size: 12px;">Distribución analítica según el estado operativo actual</p>
+                                                <div style="position: relative; height:220px; width:100%; margin-bottom: 15px;">
+                                                    <canvas id="graficoPedidos"></canvas>
+                                                </div>
+                                                <!-- Leyendas personalizadas estilizadas -->
+                                                <table class="tile_info" style="width: 100%;">
+                                                    <tr>
+                                                        <td><p><i class="fa fa-square text-warning" style="color: #F39C12;"></i> Pendientes</p></td>
+                                                        <td class="text-right"><strong>{{ pedidos_pendientes }}</strong></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><p><i class="fa fa-square text-info" style="color: #3498DB;"></i> Autorizados</p></td>
+                                                        <td class="text-right"><strong>{{ pedidos_autorizados }}</strong></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><p><i class="fa fa-square text-success" style="color: #26B99A;"></i> Entregados</p></td>
+                                                        <td class="text-right"><strong>{{ total_despachos }}</strong></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><p><i class="fa fa-square text-danger" style="color: #E74C3C;"></i> Rechazados</p></td>
+                                                        <td class="text-right"><strong>{{ pedidos_rechazados }}</strong></td>
+                                                    </tr>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endblock contenido %}
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 📌 PIE DE PÁGINA (Gentelella Footer) -->
+            <footer>
+                <div class="pull-right">
+                    Copyright © 2026 - Hospital Calcuta | Desarrollado internamente
+                </div>
+                <div class="clearfix"></div>
+            </footer>
+
         </div>
-      </div>
     </div>
-    <!-- jQuery -->
-    <script src="{% static 'vendors/jquery/dist/jquery.min.js' %}"></script>
-    <!-- Bootstrap -->
-    <script src="{% static 'vendors/bootstrap/dist/js/bootstrap.bundle.min.js' %}"></script>
-    <!-- FastClick -->
-    <script src="{% static 'vendors/fastclick/lib/fastclick.js' %}"></script>
-    <!-- NProgress -->
-    <script src="{% static 'vendors/nprogress/nprogress.js' %}"></script>
-    <!-- Chart.js -->
-    <script src="{% static 'vendors/Chart.js/dist/Chart.min.js' %}"></script>
-    <!-- gauge.js -->
-    <script src="{% static 'vendors/gauge.js/dist/gauge.min.js' %}"></script>
-    <!-- bootstrap-progressbar -->
-    <script src="{% static 'vendors/bootstrap-progressbar/bootstrap-progressbar.min.js' %}"></script>
-    <!-- iCheck -->
-    <script src="{% static 'vendors/iCheck/icheck.min.js' %}"></script>
-    <!-- Skycons -->
-    <script src="{% static 'vendors/skycons/skycons.js' %}"></script>
-    <!-- Flot -->
-    <script src="{% static 'vendors/Flot/jquery.flot.js' %}"></script>
-    <script src="{% static 'vendors/Flot/jquery.flot.pie.js' %}"></script>
-    <script src="{% static 'vendors/Flot/jquery.flot.time.js' %}"></script>
-    <script src="{% static 'vendors/Flot/jquery.flot.stack.js' %}"></script>
-    <script src="{% static 'vendors/Flot/jquery.flot.resize.js' %}"></script>
-    <!-- Flot plugins -->
-    <script src="{% static 'vendors/flot.orderbars/js/jquery.flot.orderBars.js' %}"></script>
-    <script src="{% static 'vendors/flot-spline/js/jquery.flot.spline.min.js' %}"></script>
-    <script src="{% static 'vendors/flot.curvedlines/curvedLines.js' %}"></script>
-    <!-- DateJS -->
-    <script src="{% static 'vendors/DateJS/build/date.js' %}"></script>
-    <!-- JQVMap -->
-    <script src="{% static 'vendors/jqvmap/dist/jquery.vmap.js' %}"></script>
-    <script src="{% static 'vendors/jqvmap/dist/maps/jquery.vmap.world.js' %}"></script>
-    <script src="{% static 'vendors/jqvmap/examples/js/jquery.vmap.sampledata.js' %}"></script>
-    <!-- bootstrap-daterangepicker -->
-    <script src="{% static 'vendors/moment/min/moment.min.js' %}"></script>
-    <script src="{% static 'vendors/bootstrap-daterangepicker/daterangepicker.js' %}"></script>
-    <!-- Custom Theme Scripts -->
-    <script src="{% static 'build/js/custom.min.js' %}"></script>
-  </body>
 
-  {% block extrajs %}
-  
-  
-  {% endblock extrajs %}
+    <!-- Scripts requeridos de Gentelella (Asegúrate de apuntar bien a tus carpetas estáticas) -->
+    <script src="{% static 'vendors/jquery/dist/jquery.min.js' %}"></script>
+    <script src="{% static 'vendors/bootstrap/dist/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'vendors/fastclick/lib/fastclick.js' %}"></script>
+    <script src="{% static 'vendors/nprogress/nprogress.js' %}"></script>
+    <script src="{% static 'build/js/custom.min.js' %}"></script>
+    <script src="{% static 'vendors/Chart.js/dist/Chart.min.js' %}"></script>
+
+    {% block extrajs %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Inicializamos el contenedor canvas usando la variable global Chart de Gentelella
+        var ctx = document.getElementById("graficoPedidos").getContext("2d");
+        
+        // Convertimos las variables de Django de manera segura usando comillas y parseInt
+        var pendientes = parseInt("{{ pedidos_pendientes|default:0 }}") || 0;
+        var autorizados = parseInt("{{ pedidos_autorizados|default:0 }}") || 0;
+        var entregados = parseInt("{{ total_despachos|default:0 }}") || 0;
+        var rechazados = parseInt("{{ pedidos_rechazados|default:0 }}") || 0;
+
+        // Si todos los datos están en 0, asignamos valores ficticios para la demostración estética
+        var datosGrafico = [pendientes, autorizados, entregados, rechazados];
+        if (pendientes === 0 && autorizados === 0 && entregados === 0 && rechazados === 0) {
+            datosGrafico =; 
+        }
+
+        // Configuración del gráfico adaptado al entorno oscuro de Gentelella
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Pendientes', 'Autorizados', 'Entregados', 'Rechazados'],
+                datasets: [{
+                    data: datosGrafico,
+                    backgroundColor: ['#F39C12', '#3498DB', '#26B99A', '#E74C3C'],
+                    borderWidth: 2,
+                    borderColor: '#2A3F54' // Color de fondo oscuro nativo de Gentelella
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                legend: {
+                    display: false // Desactiva leyenda nativa (Gentelella usa la versión v2.x por defecto)
+                },
+                cutoutPercentage: 70 // Sintaxis correcta para la versión de Chart.js integrada en Gentelella
+            }
+        });
+    });
+</script>
+{% endblock extrajs %}
+
+</body>
 </html>
