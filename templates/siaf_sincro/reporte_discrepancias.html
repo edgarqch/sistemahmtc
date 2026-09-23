@@ -1,0 +1,48 @@
+{% extends "index.html" %}
+{% block contenido %}
+<div class="">
+  <div class="page-title"><div class="title_left"><h3>{{ titulo_pagina }}</h3></div></div>
+  <div class="clearfix"></div>
+  <div class="row">
+    <div class="col-md-12 col-sm-12 col-xs-12">
+      <div class="x_panel" style="border-top: 3px solid #E74C3C;">
+        <div class="x_title">
+          <h2>Insumos Pendientes de Transaccionar en Sistema Central (SIAF)</h2>
+          <div class="clearfix"></div>
+        </div>
+        <div class="x_content">
+          <p class="text-muted">La siguiente lista detalla los artículos cuyo stock físico fue reducido en la ventanilla web, pero que aún figuran con saldos inflados en el SIAF por falta de digitación por parte de los operadores.</p>
+          <table class="table table-striped table-bordered text-center">
+            <thead>
+              <tr style="background-color: #2A3F54; color: white;">
+                <th>Código SIAF</th>
+                <th>Descripción del Producto</th>
+                <th>Stock en SIAF (CSV)</th>
+                <th>Stock Real (Ventanilla Django)</th>
+                <th style="background-color: #E74C3C; color: white;">Unidades Omitidas en Bodega</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for alerta in alertas %}
+              <tr>
+                <td><strong>{{ alerta.producto.codigo_siaf }}</strong></td>
+                <td>{{ alerta.producto.nombre }}</td>
+                <td><span class="badge bg-orange">{{ alerta.stock_siaf_csv }}</span></td>
+                <td><span class="badge bg-green">{{ alerta.stock_django_real }}</span></td>
+                <td><strong class="text-danger" style="font-size: 13px;"><i class="fa fa-warning"></i> {{ alerta.unidades_omitidas_siaf }} Unidades</strong></td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="5" class="text-center text-success" style="padding: 30px;">
+                  <i class="fa fa-check-circle" style="font-size: 24px;"></i><br><strong>Excelente: No existen discrepancias. El SIAF está sincronizado al 100% con los despachos.</strong>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock contenido %}

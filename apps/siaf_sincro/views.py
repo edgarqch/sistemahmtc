@@ -260,3 +260,17 @@ class CambiarPasswordTemporalView(PasswordChangeView):
             
         messages.success(self.request, "¡Contraseña actualizada con éxito! Ya puedes navegar en el sistema.")
         return super().form_valid(form)
+
+from apps.siaf_sincro.models import DiscrepanciaInventario
+
+def es_administrador(user):
+    return user.is_staff or user.groups.filter(name='Aprobadores_Almacen').exists() or user.is_superuser
+
+@login_required
+@user_passes_test(es_administrador, login_url='index')
+def reporte_discrepancias(request):
+    alertas = DiscrepanciaInventario.objects.select_related('producto').filter(unidades_omitidas_siaf__gt=0)
+    return render(request, 'siaf_sincro/reporte_discrepancias.html', {
+        'alertas': alertas,
+        'titulo_pagina': 'Auditoría: Discrepancias de Inventario SIAF'
+    })

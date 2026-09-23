@@ -208,11 +208,11 @@
                                                         <tr>
                                                             <td>{{ forloop.counter }}</td>
                                                             <td>
-                                                                <a><strong>{{ inst.nombre|default:"Documento sin nombre" }}</strong></a>
+                                                                <a><strong>{{ inst.titulo|default:"Documento sin nombre" }}</strong></a>
                                                                 <br/>
                                                                 <small>Código / Ref identificatoria</small>
                                                             </td>
-                                                            <td>{{ inst.autor.nombre }} {{ inst.autor.apellidos }}</td>
+                                                            <td>{{ inst.Autor.nombre }} {{ inst.Autor.apellidos }}</td>
                                                             <td>
                                                                 <span class="badge badge-success" style="background-color: #26B99A; padding: 5px 10px;">Vigente</span>
                                                             </td>

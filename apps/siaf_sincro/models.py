@@ -148,3 +148,19 @@ class DetallePedido(models.Model):
 
     def __str__(self):
         return f"{self.cantidad_solicitada} u. (Despachadas: {self.cantidad_despachada}) de {self.producto.nombre}"
+
+
+class DiscrepanciaInventario(models.Model):
+    producto = models.ForeignKey(ProductoSiaf, on_delete=models.CASCADE, related_name="discrepancias")
+    stock_siaf_csv = models.IntegerField(verbose_name="Stock en CSV (SIAF)")
+    stock_django_real = models.IntegerField(verbose_name="Stock Real en Django")
+    unidades_omitidas_siaf = models.PositiveIntegerField(verbose_name="Cantidad No Digitada en SIAF")
+    detectado_el = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de Detección")
+
+    class Meta:
+        verbose_name = "Discrepancia de Inventario"
+        verbose_name_plural = "Discrepancias de Inventario"
+        ordering = ['-detectado_el']
+
+    def __str__(self):
+        return f"[{self.producto.codigo_siaf}] Omitido en SIAF: {self.unidades_omitidas_siaf} u."

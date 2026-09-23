@@ -14,4 +14,6 @@ urlpatterns = [
     path('almacen/despachos/', views.listado_despachos_siaf, name='listado_despachos'),
     path('almacen/despachos/entregar/<int:pedido_id>/', views.procesar_entrega_siaf, name='procesar_entrega'),
     path('cambiar-contrasena/', views.CambiarPasswordTemporalView.as_view(), name='cambiar_password'),
+    path('reporte-discrepancias/', views.reporte_discrepancias, name='reporte_discrepancias'),
+
 ]
