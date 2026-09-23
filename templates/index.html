@@ -78,6 +78,17 @@
                                         {% if request.user|tiene_rol:"Almaceneros_Almacen" %}
                                         <li><a href="{% url 'siaf_sincro:listado_despachos' %}">Lista Despachos</a></li>
                                         {% endif %}
+                                        <!-- Opción de Control de Discrepancias SIAF -->
+                                        {% if user.is_superuser or user.is_staff or 'Aprobadores_Almacen' in user.groups.all %}
+                                        <li>
+                                            <a href="{% url 'siaf_sincro:reporte_discrepancias' %}">
+                                            <i class="fa fa-exclamation-triangle" style="color: #E74C3C;"></i> 
+                                            Discrepancias SIAF 
+                                            <span class="label label-danger pull-right">Auditoría</span>
+                                            </a>
+                                        </li>
+                                        {% endif %}
+
                                     </ul>
                                 </li>
 
