@@ -2,71 +2,133 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <title>Comprobante de Requerimiento {{ pedido.codigo_pedido }}</title>
     <style>
-        @page { 
-            size: a5; /* Formato más compacto ideal para tickets/comprobantes de pedido */
-            margin: 1cm; 
+        @page {
+            size: a4;
+            margin: 0.8cm;
         }
-        body { font-family: Arial, sans-serif; font-size: 10px; color: #333; line-height: 1.3; }
-        .ticket-header { text-align: center; border-bottom: 1px dashed #333; padding-bottom: 8px; margin-bottom: 12px; }
-        .hospital-title { font-size: 13px; font-weight: bold; color: #2A3F54; text-transform: uppercase; }
-        .ticket-title { font-size: 11px; font-weight: bold; color: #73879C; margin-top: 3px; }
-        .pedido-codigo { font-size: 14px; color: #E74C3C; font-weight: bold; margin-top: 5px; }
-        
-        .info-block { width: 100%; margin-bottom: 12px; font-size: 9.5px; }
-        .info-block td { padding: 2px 0; }
-        
-        .content-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-        .content-table th { border-bottom: 1px solid #333; text-align: left; padding: 5px; font-weight: bold; font-size: 9px; }
-        .content-table td { padding: 6px 5px; border-bottom: 1px calc(#f0f0f0) solid; }
-        
-        .aviso-footer { text-align: center; font-style: italic; font-size: 9px; color: #73879C; margin-top: 15px; border-top: 1px dashed #333; padding-top: 8px; }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 9.5px;
+            color: #333333;
+            line-height: 1.2;
+        }
+        .header-table {
+            width: 100%;
+            border-bottom: 2px solid #73879C;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+        .hospital-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #2A3F54;
+        }
+        .pedido-codigo {
+            font-size: 14px;
+            color: #F39C12; /* Color naranja de advertencia/trámite */
+            font-weight: bold;
+        }
+        .info-table {
+            width: 100%;
+            margin-bottom: 12px;
+            background-color: #fcf8e3; /* Fondo amarillento de borrador */
+            border: 0.5px solid #ffa;
+            padding: 6px;
+        }
+        .content-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            table-layout: fixed;
+        }
+        .content-table th {
+            background-color: #73879C;
+            color: #ffffff;
+            font-weight: bold;
+            padding: 4px 6px;
+            text-align: left;
+            border: 0.5px solid #73879C;
+        }
+        .content-table td {
+            padding: 4px 6px;
+            border: 0.5px solid #dddddd;
+        }
+        .alerta-tramite {
+            border: 1px dashed #F39C12;
+            background-color: #fffdf9;
+            color: #c07d0d;
+            text-align: center;
+            padding: 8px;
+            font-weight: bold;
+            margin-top: 30px;
+            font-size: 10px;
+        }
     </style>
 </head>
 <body>
-    <div class="ticket-header">
-        <div class="hospital-title">{{ hospital_nombre }}</div>
-        <div class="ticket-title">COMPROBANTE DE SOLICITUD DE BIENES</div>
-        <div class="pedido-codigo">{{ pedido.codigo_pedido }}</div>
-    </div>
 
-    <table class="info-block">
+    <table class="header-table">
         <tr>
-            <td><strong>Solicitante:</strong> {{ pedido.usuario.username }}</td>
-            <td style="text-align: right;"><strong>Fecha Pedido:</strong> {{ pedido.fecha_pedido|date:"d/m/Y H:i" }}</td>
+            <td>
+                <span class="hospital-title">{{ hospital_nombre }}</span><br>
+                <span style="color: #777777; font-size: 8px;">SIH - TICKET DE REQUERIMIENTO EN TRÁMITE</span>
+            </td>
+            <td style="text-align: right; font-weight: bold; font-size: 11px;">
+                COMPROBANTE DE SOLICITUD<br>
+                <span class="pedido-codigo">{{ pedido.codigo_pedido }}</span>
+            </td>
+        </tr>
+    </table>
+
+    <table class="info-table">
+        <tr>
+            <td style="font-weight: bold; width: 12%;">Solicitante:</td>
+            <td style="width: 23%;">{{ pedido.usuario.get_full_name|default:pedido.usuario.username }}</td>
+            <td style="font-weight: bold; width: 13%;">Unidad Destino:</td>
+            <td style="width: 22%;">{{ pedido.unidad.nombre|default:"Sin Especificar" }}</td>
+            <td style="font-weight: bold; width: 12%;">Fecha Pedido:</td>
+            <td style="width: 18%; text-align: right;">{{ pedido.fecha_pedido|date:"d/m/Y H:i" }}</td>
         </tr>
         <tr>
-            <td><strong>Estado Actual:</strong> <span style="color: #F39C12; font-weight: bold;">{{ pedido.get_estado_display }}</span></td>
-            <td style="text-align: right;"><strong>Origen:</strong> Portal Web Almacén</td>
-        </tr>
-        <tr>
-            <td colspan="2" style="padding-top: 5px;"><strong>Justificación/Destino:</strong> {{ pedido.justificacion }}</td>
+            <td style="font-weight: bold;">Estado Actual:</td>
+            <td style="color: #f39c12; font-weight: bold;">{{ pedido.get_estado_display }}</td>
+            <td style="font-weight: bold;">Justificación:</td>
+            <td colspan="3">{{ pedido.justificacion }}</td>
         </tr>
     </table>
 
     <table class="content-table">
         <thead>
             <tr>
-                <th style="width: 20%;">Código</th>
-                <th style="width: 65%;">Descripción del Artículo</th>
-                <th style="width: 15%; text-align: center;">Cant. Sol.</th>
+                <th style="width: 15%;">Código SIAF</th>
+                <th style="width: 65%;">Descripción del Artículo Solicitado</th>
+                <th style="width: 20%; text-align: center;">Cantidad Solicitada</th>
             </tr>
         </thead>
         <tbody>
             {% for detalle in detalles %}
             <tr>
-                <td>{{ detalle.producto.codigo_siaf }}</td>
-                <td>{{ detalle.producto.nombre }}</td>
-                <td style="text-align: center;"><strong>{{ detalle.cantidad_solicitada }}</strong></td>
+                <td style="font-weight: bold;">{{ detalle.producto.codigo_siaf }}</td>
+                <td>{{ detalle.producto.nombre|truncatechars:65 }}</td>
+                <td style="text-align: center; font-weight: bold;">{{ detalle.cantidad_solicitada }}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 
-    <div class="aviso-footer">
-        Este documento es un respaldo digital de su requerimiento.<br>
-        <strong>No requiere firmas para su validez en sistema.</strong><br>
-        Su pedido pasará a revisión de la Dirección o Administración para su posterior despacho físico.
+    <!-- Mensaje perimetral para evitar fraudes en ventanilla -->
+    <div class="alerta-tramite">
+        ⚠ ESTE DOCUMENTO NO TIENE VALIDEZ DE DESPACHO EN BODEGA<br>
+        <span style="font-size: 8.5px; font-weight: normal; display: block; margin-top: 3px;">
+            El estado actual es {{ pedido.get_estado_display }}. Las existencias físicas se descontarán del inventario únicamente cuando el almacenero procese la entrega en el sistema.
+        </span>
     </div>
+
+    <div style="text-align: right; font-size: 8px; color: #555555; margin-top: 20px;">
+        Página <pdf:pagenumber /> de <pdf:pagecount />
+    </div>
+
 </body>
 </html>

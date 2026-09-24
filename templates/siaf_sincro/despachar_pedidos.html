@@ -4,15 +4,51 @@
 <div class="">
   <div class="page-title"><div class="title_left"><h3>{{ titulo_pagina }}</h3></div></div>
   <div class="clearfix"></div>
-  
-  {% if messages %}
-    {% for message in messages %}
-      <div class="alert alert-success alert-dismissible fade in" role="alert">
-        <button type="button" class="close" data-dismiss="alert"><span>×</span></button>
-        <strong>Sistemas:</strong> {{ message }}
+
+  <!-- ======================================================== -->
+  <!-- 🎴 MODAL DE CONTROL DE STOCK - ESTILO GENTELELLA ADMIN   -->
+  <!-- ======================================================== -->
+  {% if error_inventario %}
+  <div id="modalErrorInventario" class="modal fade" role="dialog" style="background: rgba(0,0,0,0.55);">
+    <div class="modal-dialog modal-md" style="margin-top: 12%;">
+      <div class="modal-content" style="border-radius: 4px; border-top: 4px solid #169F85; box-shadow: 0 5px 15px rgba(0,0,0,.3);">
+        
+        <!-- Cabecera del Modal (Verde Esmeralda Gentelella) -->
+        <div class="modal-header" style="background-color: #f4fbf9; padding: 12px 15px; border-bottom: 1px solid #d3eee9;">
+          <button type="button" class="close" data-dismiss="modal" style="font-size: 22px; color: #169F85; opacity: 0.8;">&times;</button>
+          <h4 class="modal-title" style="color: #2A3F54; font-weight: bold; font-size: 14px; letter-spacing: 0.5px;">
+            <i class="fa fa-cubes" style="color: #169F85; margin-right: 5px;"></i> CONTROL DE STOCK — ALMACÉN CENTRAL
+          </h4>
+        </div>
+        
+        <!-- Cuerpo del Modal (Fondo blanco nítido y texto ordenado) -->
+        <div class="modal-body" style="background-color: #ffffff !important; color: #2A3F54 !important; padding: 25px 20px; font-size: 12.5px; line-height: 1.6;">
+          <div style="display: table; width: 100%;">
+            <div style="display: table-cell; width: 45px; vertical-align: middle; text-align: center;">
+              <i class="fa fa-exclamation-triangle" style="color: #F39C12; font-size: 28px;"></i>
+            </div>
+            <div style="display: table-cell; vertical-align: middle; padding-left: 10px; color: #2A3F54 !important;">
+              <span style="font-weight: bold; display: block; margin-bottom: 4px; color: #E74C3C;">¡Operación de Despacho Detenida!</span>
+              {{ error_inventario }}
+            </div>
+          </div>
+        </div>
+        
+        <!-- Pie del Modal (Botones Corporativos del Sistema Hospitalario) -->
+        <div class="modal-footer" style="background-color: #f9f9f9; padding: 10px 15px; border-top: 1px solid #edf1f2;">
+          <button type="button" class="btn btn-default btn-sm" data-dismiss="modal" style="border-radius: 3px; font-weight: 500;">
+            Cancelar
+          </button>
+          <button type="button" class="btn btn-success btn-sm" data-dismiss="modal" style="background-color: #26B99A; border-color: #169F85; font-weight: bold; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <i class="fa fa-pencil"></i> Corregir Saldos en Ventanilla
+          </button>
+        </div>
+
       </div>
-    {% endfor %}
+    </div>
+  </div>
   {% endif %}
+  <!-- ======================================================== -->
 
   <div class="row">
     <div class="col-md-12 col-sm-12 col-xs-12">
@@ -44,7 +80,7 @@
                 <div class="well" style="background-color: #ffffff; border: 1px solid #dcdcdc; margin-bottom: 20px; padding: 15px;">
                   <h4 style="color: #2A3F54; font-weight: bold;">Pedido: {{ pedido.codigo_pedido }} &mdash; Solicitante: {{ pedido.usuario.username }}</h4>
                   <p><strong>Justificación:</strong> "{{ pedido.justificacion }}"</p>
-                  
+
                   <form action="{% url 'siaf_sincro:procesar_entrega' pedido.id %}" method="POST">
                     {% csrf_token %}
                     <table class="table table-striped table-bordered">
@@ -130,4 +166,44 @@
     </div>
   </div>
 </div>
+
+<!-- ======================================================== -->
+  <!-- ⚡ SCRIPT DE INICIALIZACIÓN NATIVA DE PESTAÑAS (CORREGIDO) ⚡ -->
+  <!-- ======================================================== -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      // Usamos el disparador nativo de Bootstrap para activar la pestaña sin romper los estilos
+      var tabVentanilla = document.getElementById("ventanilla-tab");
+      if (tabVentanilla) {
+         tabVentanilla.click();
+      }
+    });
+
+
+    document.addEventListener("DOMContentLoaded", function() {
+      // 1. Inicialización automática de la Pestaña Ventanilla
+      var tabVentanilla = document.getElementById("ventanilla-tab");
+      if (tabVentanilla) {
+         tabVentanilla.click();
+      }
+
+      // 2. ACTIVACIÓN AUTOMÁTICA DEL MODAL DE ERROR SI EXISTE
+      {% if error_inventario %}
+        // Verificamos si la suite de jQuery del hospital está activa para levantarlo de inmediato
+        if (typeof $ !== 'undefined') {
+          $('#modalErrorInventario').modal('show');
+        } else {
+          // Respaldo en JS Puro en caso de que jQuery tarde en cargar en la RAM
+          var modalElement = document.getElementById('modalErrorInventario');
+          if (modalElement) {
+            modalElement.classList.add('in');
+            modalElement.style.display = 'block';
+          }
+        }
+      {% endif %}
+    });
+
+
+
+  </script>
 {% endblock contenido %}

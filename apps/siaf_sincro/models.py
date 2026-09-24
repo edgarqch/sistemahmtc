@@ -93,6 +93,11 @@ class PedidoAlmacen(models.Model):
         related_name="pedidos",
         verbose_name="Unidad Solicitante"
     )
+    fecha_entrega = models.DateTimeField(
+        null=True, 
+        blank=True, 
+        verbose_name="Fecha y Hora de Entrega"
+    )
 
     class Meta:
         verbose_name = "Pedido de Almacén"

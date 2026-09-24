@@ -136,9 +136,6 @@ def generar_pdf_pedido(request, pedido_id):
     response['Content-Disposition'] = f'inline; filename="Ticket_{pedido.codigo_pedido}.pdf"'
     return response
 
-
-
-
 # Control de seguridad: Verifica que el usuario sea administrador o personal autorizado
 def es_administrador(user):
     return user.is_staff or user.groups.filter(name='Administracion').exists()
@@ -213,37 +210,76 @@ def procesar_entrega_siaf(request, pedido_id):
         pedido = get_object_or_404(PedidoAlmacen, id=pedido_id)
         
         if pedido.estado != 'AUTORIZADO':
-            messages.warning(request, "El pedido no está autorizado.")
+            messages.warning(request, "El pedido no está autorizado o ya fue procesado.")
             return redirect('siaf_sincro:listado_despachos')
             
         try:
             with transaction.atomic():
-                # Capturamos las listas de IDs de detalles y cantidades modificadas por el almacenero
                 detalles_ids = request.POST.getlist('detalle_id[]')
                 cantidades_despachadas = request.POST.getlist('cantidad_despachada[]')
                 
-                # Actualizamos cada renglón del pedido con la nueva cantidad
-                for d_id, cant_desp in zip(detalles_ids, cantidades_despachadas):
-                    detalle = DetallePedido.objects.get(id=d_id, pedido=pedido)
-                    nueva_cantidad = int(cant_desp)
-                    
-                    if nueva_cantidad > detalle.cantidad_solicitada:
-                        raise ValueError(f"No puedes despachar más de lo solicitado en: {detalle.producto.nombre}")
+                # Respaldo contra aplanamiento de arrays del navegador
+                if not detalles_ids:
+                    detalles_ids = request.POST.get('detalle_id[]')
+                    detalles_ids = [detalles_ids] if detalles_ids else []
+                if not cantidades_despachadas:
+                    cantidades_despachadas = request.POST.get('cantidad_despachada[]')
+                    cantidades_despachadas = [cantidades_despachadas] if cantidades_despachadas else []
+
+                # Procesamiento e impacto de renglones
+                if not detalles_ids or len(detalles_ids) == 0:
+                    detalles_directos = pedido.detallepedido_set.all()
+                    if not detalles_directos.exists():
+                        detalles_directos = pedido.detalles.all()
                         
-                    detalle.cantidad_despachada = nueva_cantidad
-                    detalle.save()
+                    for detalle in detalles_directos:
+                        detalle.cantidad_despachada = detalle.cantidad_solicitada
+                        detalle.save() # Aquí saltará la regla si no hay stock
+                else:
+                    for d_id, cant_desp in zip(detalles_ids, cantidades_despachadas):
+                        if not d_id or cant_desp is None or cant_desp == '':
+                            continue
+                            
+                        detalle = DetallePedido.objects.filter(id=int(d_id), pedido=pedido).first()
+                        if not detalle:
+                            continue
+                            
+                        nueva_cantidad = int(cant_desp)
+                        if nueva_cantidad > detalle.cantidad_solicitada:
+                            raise ValueError(f"No puedes despachar más de lo solicitado en: {detalle.producto.nombre}")
+                        
+                        detalle.cantidad_despachada = nueva_cantidad
+                        detalle.save() # Aquí saltará la regla si no hay stock
                 
-                # Una vez actualizados los detalles, cambiamos el estado para gatillar el descuento de stock
+                # Consolidación final de la orden en PostgreSQL
                 pedido.estado = 'ENTREGADO'
+                try:
+                    pedido.fecha_entrega = timezone.now()
+                except Exception:
+                    pedido.fecha_entrega = datetime.now()
                 pedido.save()
                 
-            messages.success(request, f"¡Éxito! El pedido {pedido.codigo_pedido} ha sido despachado con cantidades ajustadas.")
-        except ValueError as e:
-            messages.error(request, str(e))
-        except Exception as e:
-            messages.error(request, f"Error crítico en el despacho: {str(e)}")
+            messages.success(request, f"¡Éxito! El pedido {pedido.codigo_pedido} ha sido despachado correctamente.")
+            return redirect('siaf_sincro:listado_despachos') # Éxito: redirección normal
             
-        return redirect('siaf_sincro:listado_despachos')
+        except (ValueError, Exception) as e:
+            # ========================================================
+            # 🛡️ RENDER DIRECTO CONTRA CONFLICTOS DE REDIRECCIÓN 🛡️
+            # ========================================================
+            error_msg = f"No se puede despachar: {str(e)}"
+            
+            # Recreamos las mismas consultas exactas de tu función listado_despachos_siaf
+            pedidos_autorizados = PedidoAlmacen.objects.filter(estado='AUTORIZADO')
+            pedidos_entregados = PedidoAlmacen.objects.filter(estado='ENTREGADO').order_by('-fecha_pedido')[:100]
+            
+            context = {
+                'pedidos': pedidos_autorizados,
+                'pedidos_entregados': pedidos_entregados,
+                'titulo_pagina': 'Despacho, Entrega e Impresión de Pedidos (Responsable de Almacén)',
+                'error_inventario': error_msg  # Inyectamos el texto del stock directo al HTML
+            }
+            return render(request, 'siaf_sincro/despachar_pedidos.html', context)
+
 
 from django.contrib.auth.views import PasswordChangeView
 from django.urls import reverse_lazy

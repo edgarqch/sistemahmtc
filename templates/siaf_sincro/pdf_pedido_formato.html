@@ -4,99 +4,113 @@
     <meta charset="UTF-8">
     <title>Pedido de Almacén {{ pedido.codigo_pedido }}</title>
     <style>
+        /* 1. MÁRGENES DE HOJA REDUCIDOS PARA GANAR ESPACIO VERTICAL */
         @page {
             size: a4;
-            margin: 1.5cm;
-            /* Eliminamos la regla @bottom-right que causaba el quiebre en Python 3.12 */
+            margin: 0.8cm 0.8cm 1.0cm 0.8cm;
         }
         body {
             font-family: Arial, sans-serif;
-            font-size: 11px;
+            font-size: 9.5px; /* Fuente general compactada */
             color: #333333;
-            line-height: 1.4;
+            line-height: 1.2;
         }
-        /* Encabezado Institucional */
+        /* Encabezado Institucional Compacto */
         .header-table {
             width: 100%;
             border-bottom: 2px solid #2A3F54;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
         }
         .hospital-title {
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
             color: #2A3F54;
         }
         .document-title {
-            font-size: 14px;
+            font-size: 11px;
             font-weight: bold;
             text-align: right;
             color: #333333;
         }
         .pedido-codigo {
-            font-size: 16px;
+            font-size: 14px;
             color: #E74C3C;
             font-weight: bold;
         }
-        /* Información de la Solicitud */
+        /* Información de la Solicitud Reestructurada */
         .info-table {
             width: 100%;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
             background-color: #f9f9f9;
-            border: 1px solid #e0e0e0;
-            padding: 10px;
+            border: 0.5px solid #e0e0e0;
+            padding: 6px;
         }
         .info-table td {
-            padding: 4px;
+            padding: 2px 4px;
         }
         .label {
             font-weight: bold;
             color: #2A3F54;
-            width: 18%;
         }
-        /* Tabla de Contenido / Items */
+        
+        /* 2. TABLA ULTRA-COMPACTA CON ANCHOS FIJOS */
         .content-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 40px;
+            margin-bottom: 20px;
+            table-layout: fixed; /* Mantiene fijos los anchos asignados */
         }
         .content-table th {
             background-color: #2A3F54;
             color: #ffffff;
             font-weight: bold;
-            padding: 8px;
+            padding: 4px 6px;
             text-align: left;
-            border: 1px solid #2A3F54;
+            border: 0.5px solid #2A3F54;
+            font-size: 9px;
         }
         .content-table td {
-            padding: 8px;
-            border: 1px solid #dddddd;
+            padding: 4px 6px;
+            border: 0.5px solid #dddddd;
+            vertical-align: middle;
         }
+
+        /* Rediseño del contenedor para actuar como una máscara de corte rígida */
+        .recorte-linea {
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            width: 100%;       /* Ocupa el 100% de la celda asignada */
+            text-overflow: clip; /* Corta el texto de manera inmediata al llegar al límite */
+        }
+
         .text-center {
             text-align: center;
         }
-        /* Sección de Firmas de Autorización */
-        .firma-section {
-            width: 100%;
-            margin-top: 60px;
+        .text-right {
+            text-align: right;
         }
-        .firma-box {
-            width: 45%;
-            text-align: center;
-            vertical-align: bottom;
-        }
+        
+        /* Sección de Firmas de Autorización Optimizada */
         .linea-firma {
-            border-top: 1px solid #333333;
-            width: 80%;
-            margin: 0 auto 5px auto;
+            border-top: 0.5px solid #333333;
+            width: 85%;
+            margin: 0 auto 4px auto;
         }
-        /* Numeración compatible con Python 3.12 */
+        
+        /* Numeración */
         .footer-paginacion {
             text-align: right;
-            font-size: 9px;
+            font-size: 8px;
             color: #555555;
-            margin-top: 20px;
+            margin-top: 10px;
         }
+        strong {
+            margin: 0;
+            padding: 0;
+        }
+
     </style>
 </head>
 <body>
@@ -106,10 +120,10 @@
         <tr>
             <td>
                 <span class="hospital-title">{{ hospital_nombre }}</span><br>
-                <span style="color: #777777; font-size: 9px;">SIH - Sistema Integral Hospitalario</span>
+                <span style="color: #777777; font-size: 8px;">SIH - Sistema Integral Hospitalario</span>
             </td>
             <td class="document-title">
-                DOCUMENTO DE PEDIDO<br>
+                A-1 DOCUMENTO DE SALIDA DE ALMACENES<br>
                 <span class="pedido-codigo">{{ pedido.codigo_pedido }}</span>
             </td>
         </tr>
@@ -118,45 +132,47 @@
     <!-- Información General -->
     <table class="info-table">
         <tr>
-            <td class="label">Solicitante:</td>
-            <td>{{ pedido.usuario.get_full_name|default:pedido.usuario.username }}</td>
-            <td class="label">Fecha Pedido:</td>
-            <td>{{ pedido.fecha_pedido|date:"d/m/Y H:i" }}</td>
+            <td class="label" style="width: 12%;">Solicitante:</td>
+            <td style="width: 23%;">{{ pedido.usuario.get_full_name|default:pedido.usuario.username }}</td>
+            <td class="label" style="width: 13%;">Unidad Destino:</td>
+            <td style="width: 22%;">{{ pedido.unidad.nombre|default:"Sin Especificar" }}</td>
+            <td class="label" style="width: 12%;">Fecha Pedido:</td>
+            <td style="width: 18%;" class="text-right">{{ pedido.fecha_pedido|date:"d/m/Y H:i" }}</td>
         </tr>
         <tr>
-            <!-- MUESTRA LA UNIDAD REAL O EL COMODÍN DE LOS PEDIDOS ANTIGUOS -->
-            <td><strong>Unidad Destino:</strong> {{ pedido.unidad.nombre|default:"Sin Especificar" }}</td>
-            <td><strong>Almacén:</strong> Almacén Central</td>
-        </tr>
-        <tr>
-            <td class="label">Estado Actual:</td>
-            <td><strong>{{ pedido.get_estado_display }}</strong></td>
-            <td class="label">Almacén Origen:</td>
-            <td>Almacén Central (General)</td>
-        </tr>
-        <tr>
-            <td class="label" style="vertical-align: top;">Justificación:</td>
+            <td class="label">Justificación:</td>
             <td colspan="3" style="text-align: justify;">{{ pedido.justificacion }}</td>
+            <td class="label">Almacén Origen:</td>
+            <td class="text-right">Almacén Central (Gral.)</td>
         </tr>
     </table>
 
-    <!-- Listado de Artículos Solicitados -->
+        <!-- Listado de Artículos Solicitados con Truncamiento Nativo en Servidor -->
     <table class="content-table">
         <thead>
             <tr>
-                <th>Código SIAF</th>
-                <th>Descripción</th>
-                <th>U. Medida</th>
-                <th>Cant. Solicitada</th>
-                <th>Cant. Entregada</th> <!-- Nueva columna -->
+                <th style="width: 12%;">Código SIAF</th>
+                <th style="width: 53%;">Descripción</th>
+                <th style="width: 15%;">U. Medida</th>
+                <th style="width: 10%; text-align: center;">Cant. Sol.</th>
+                <th style="width: 10%; text-align: center;">Cant. Ent.</th>
             </tr>
         </thead>
         <tbody>
             {% for detalle in detalles %}
             <tr>
-                <td>{{ detalle.producto.codigo_siaf }}</td>
-                <td>{{ detalle.producto.nombre }}</td>
-                <td>{{ detalle.producto.unidad_medida }}</td>
+                <!-- Código SIAF -->
+                <td style="font-weight: bold;">{{ detalle.producto.codigo_siaf }}</td>
+                
+                <!-- Descripción: Forzada a cortarse en el caracter 65 e inyectar puntos suspensivos (...) -->
+                <td>
+                    {{ detalle.producto.nombre|truncatechars:65 }}
+                </td>
+                
+                <!-- Unidad de Medida -->
+                <td><span style="color: #555555;">{{ detalle.producto.unidad_medida }}</span></td>
+                
+                <!-- Cantidades -->
                 <td style="text-align: center;">{{ detalle.cantidad_solicitada }}</td>
                 <td style="text-align: center; color: #0ac869;"><strong>{{ detalle.cantidad_despachada }}</strong></td>
             </tr>
@@ -164,60 +180,66 @@
         </tbody>
     </table>
 
-
-    <!-- Firmas Reguladoras -->
-    <!-- Sección de Firmas Reguladoras del Hospital Calcuta -->
-    <!-- Nuevo Bloque de Firmas con Firma Digital Integrada -->
-    <table style="width: 100%; margin-top: 20px; table-layout: fixed;">
+    <!-- Firmas Reguladoras Rediseñadas en Espacio de Altura Controlada -->
+    <table style="width: 100%; margin-top: 30px; table-layout: fixed;">
         <tr>
-            <!-- 1. EL QUE AUTORIZA (DIGITAL) -->
-            <td style="width: 32%; text-align: center; vertical-align: bottom;">
+            <!-- 1. EL QUE AUTORIZA (DIGITAL UNIFICADO SIN MÁRGENES) -->
+            <td style="width: 32%; text-align: center; vertical-align: bottom; padding: 0; margin: 0;">
                 {% if pedido.firma_hash %}
-                    <!-- Recuadro estético que simula el sello digital oficial del hospital -->
-                    <div style="border: 1.5px solid #169F85; background-color: #f4fbf9; padding: 6px; margin-bottom: 5px; border-radius: 4px; font-size: 8.5px; text-align: left;">
-                        <span style="color: #169F85; font-weight: bold; display: block; text-align: center; font-size: 9.5px; margin-bottom: 3px;">
+                    <!-- Unificamos en un solo recuadro con reseteo de márgenes y paddings internos -->
+                    <div style="border: 1px solid #169F85; background-color: #f4fbf9; padding: 4px 6px; margin: 0 0 2px 0; border-radius: 3px; font-size: 7.5px; text-align: left;">
+                        <span style="color: #169F85; font-weight: bold; display: block; text-align: center; font-size: 8.5px; margin: 0 0 3px 0; padding: 0 0 2px 0; border-bottom: 0.5px solid #169F85;">
                             ✔ AUTORIZADO CON FIRMA DIGITAL
                         </span>
-                        <!-- <strong>Por:</strong> {{ pedido.usuario_autoriza.first_name|default:pedido.usuario_autoriza.username }}<br> -->
-                         <strong>Por:</strong> {{ pedido.usuario_autoriza.get_full_name|default:pedido.usuario_autoriza.username }}<br>
-                        <strong>Usuario:</strong> {{ pedido.usuario.username }} <br>
-                        <strong>Fecha:</strong> {{ pedido.fecha_autorizacion|date:"d/m/Y H:i" }}<br>
-                        <span style="font-family: monospace; color: #555;"><strong>ID-USUARIO:</strong> {{ pedido.firma_hash }}</span>
+                        <div style="line-height: 1.2; color: #333333; margin: 0; padding: 0;">
+                            <strong>Por:</strong> {{ pedido.usuario_autoriza.get_full_name|default:pedido.usuario_autoriza.username }}<br>
+                            <strong>Usuario:</strong> {{ pedido.usuario.username }} <br>
+                            <strong>Fecha:</strong> {{ pedido.fecha_autorizacion|date:"d/m/Y H:i" }}<br>
+                            <span style="font-family: monospace; color: #555555;"><strong>ID-HASH:</strong> {{ pedido.firma_hash }}</span>
+                        </div>
                     </div>
                 {% else %}
-                    <div style="height: 20px;"></div>
-                    <div class="linea-firma"></div>
+                    <div style="height: 40px; margin: 0; padding: 0;"></div>
+                    <div class="linea-firma" style="margin: 0 auto 3px auto;"></div>
                 {% endif %}
-                <strong>Autorizado por (Vo.Bo.)</strong>
+                <!-- Texto pie de firma libre de márgenes de bloque -->
+                <span style="font-size: 8.5px; font-weight: bold; display: block; margin: 2px 0 0 0; padding: 0;">Autorizado por (Vo.Bo.)</span>
             </td>
-            
-            <td style="width: 2%;"></td> <!-- Espaciador -->
 
-            <!-- 2. EL ALMACENERO (FÍSICO) -->
-            <td style="width: 32%; text-align: center; vertical-align: bottom;">
-                <div style="height: 65px;"></div> <!-- Espacio para el sello físico de la bodega -->
-                <div class="linea-firma"></div>
-                <strong>Entregado por Almacén</strong>
-            </td>
+
             
-            <td style="width: 2%;"></td> <!-- Espaciador -->
+            <td style="width: 2%;"></td>
+
+            <!-- 2. EL ALMACENERO (FÍSICO CON HORA DE ENTREGA) -->
+            <td style="width: 32%; text-align: center; vertical-align: bottom; padding: 0; margin: 0;">
+                <div style="height: 45px; margin: 0; padding: 0;"></div> <!-- Espacio para el sello físico -->
+                <div class="linea-firma" style="margin: 0 auto 3px auto;"></div>
+                <span style="font-size: 8.5px; font-weight: bold; display: block; margin: 0; padding: 0;">Entregado por Almacén</span>
+                {% if pedido.fecha_entrega %}
+                    <span style="font-size: 7.5px; color: #555555; display: block; margin-top: 1px; padding: 0;">
+                        Hora: {{ pedido.fecha_entrega|date:"H:i" }}
+                    </span>
+                {% endif %}
+            </td>
+
+            
+            <td style="width: 2%;"></td>
 
             <!-- 3. EL SOLICITANTE / RECEPCIÓN (FÍSICO) -->
             <td style="width: 32%; text-align: center; vertical-align: bottom;">
-                <div style="height: 65px;"></div> <!-- Espacio para la firma manuscrita de quien recibe en el piso -->
+                <div style="height: 45px;"></div> 
                 <div class="linea-firma"></div>
                 <strong>Recibí Conforme (Solicitante)</strong>
-                <br><span style="font-size: 8.5px; color: #73879C;">{{ pedido.usuario.first_name }}</span>
+                <br><span style="font-size: 7.5px; color: #73879C;">{{ pedido.usuario.first_name }}</span>
             </td>
         </tr>
     </table>
 
-
-
-    <!-- Paginador compatible con Python 3.12 usando tags nativos de xhtml2pdf -->
+    <!-- Paginador nativo de xhtml2pdf -->
     <div class="footer-paginacion">
         Página <pdf:pagenumber /> de <pdf:pagecount />
     </div>
 
 </body>
 </html>
+
