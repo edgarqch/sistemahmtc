@@ -45,3 +45,46 @@ class PedidoAlmacenAdmin(admin.ModelAdmin):
 
 # NOTA: Si aún no habías registrado ProductoSiaf, puedes descomentar la siguiente línea:
 # admin.site.register(ProductoSiaf)
+
+from .models import UnidadHospitalaria, DiscrepanciaInventario
+
+# ... (Mantén aquí tus registros previos de PedidoAlmacen y ProductoSiaf) ...
+
+@admin.register(UnidadHospitalaria)
+class UnidadHospitalariaAdmin(admin.ModelAdmin):
+    """Mapeo del catálogo de servicios médicos y estaciones de enfermería."""
+    list_display = ('nombre', 'codigo_interno')
+    search_fields = ('nombre', 'codigo_interno')
+    ordering = ('nombre',)
+
+
+@admin.register(DiscrepanciaInventario)
+class DiscrepanciaInventarioAdmin(admin.ModelAdmin):
+    """Bandeja de auditoría del Escudo de Deltas contra asimetrías del SIAF."""
+    list_display = (
+        'producto', 
+        'stock_siaf_csv', 
+        'stock_django_real', 
+        'unidades_omitidas_siaf', 
+        'detectado_el'
+    )
+    list_filter = ('detectado_el',)
+    search_fields = ('producto__codigo_siaf', 'producto__nombre')
+    ordering = ('-detectado_el',)
+    
+    # Bloqueamos la edición manual en el panel web para proteger la integridad de la auditoría
+    readonly_fields = (
+        'producto', 
+        'stock_siaf_csv', 
+        'stock_django_real', 
+        'unidades_omitidas_siaf', 
+        'detectado_el'
+    )
+
+    def has_add_permission(self, request):
+        """Evita la creación manual de registros de discrepancia desde el admin."""
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        """Evita la eliminación accidental de registros de auditoría."""
+        return False
