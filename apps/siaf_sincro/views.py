@@ -156,7 +156,7 @@ from django.utils import timezone
 import hashlib
 
 @login_required
-@user_passes_test(es_administrador, login_url='index')
+@user_passes_test(es_aprobador, login_url='index')
 def procesar_autorizacion_siaf(request, pedido_id):
     if request.method == 'POST':
         pedido = get_object_or_404(PedidoAlmacen, id=pedido_id)
