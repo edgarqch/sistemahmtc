@@ -108,29 +108,42 @@ class PedidoAlmacen(models.Model):
         return f"Pedido {self.codigo_pedido} - {self.usuario.username} ({self.get_estado_display()})"
 
     def save(self, *args, **kwargs):
+        # 1. Generador automático del código correlativo secuencial
         if not self.codigo_pedido:
             ultimo_pedido = PedidoAlmacen.objects.order_by('id').last()
             self.codigo_pedido = 'PED-00001' if not ultimo_pedido else f'PED-{(ultimo_pedido.id + 1):05d}'
         
+        # 2. Control transaccional de inventario (Deltas e Inversiones)
         if self.pk:  
             pedido_anterior = PedidoAlmacen.objects.get(pk=self.pk)
             
-            # El stock SOLO se descuenta cuando el estado cambia a ENTREGADO
+            # ────────── ESCENARIO A: EL PEDIDO PASA A SER ENTREGADO (RESTA STOCK) ──────────
             if pedido_anterior.estado != 'ENTREGADO' and self.estado == 'ENTREGADO':
                 from django.db import transaction
                 with transaction.atomic():
                     for detalle in self.detalles.all():
                         producto = detalle.producto
                         
-                        # ⚠️ CAMBIO CLAVE: Ahora validamos y descontamos la CANTIDAD DESPACHADA
+                        # Validación contra existencias negativas en base a la cantidad despachada ajustada
                         if producto.stock_unidades < detalle.cantidad_despachada:
                             raise ValueError(
                                 f"No se puede despachar. Stock insuficiente en Almacén Central para: {producto.nombre}. "
                                 f"Disponible: {producto.stock_unidades}, A entregar: {detalle.cantidad_despachada}."
                             )
                         
-                        # Deducción atómica basándose en lo que realmente sale
+                        # Deducción atómica del inventario web
                         producto.stock_unidades -= detalle.cantidad_despachada
+                        producto.save()
+            
+            # ────────── ESCENARIO B: REVERSIÓN DE EMERGENCIA EN DJANGO ADMIN (SUMA STOCK) ──────────
+            elif pedido_anterior.estado == 'ENTREGADO' and self.estado != 'ENTREGADO':
+                from django.db import transaction
+                with transaction.atomic():
+                    for detalle in self.detalles.all():
+                        producto = detalle.producto
+                        
+                        # Devolvemos de forma atómica las unidades que el almacenero había sacado
+                        producto.stock_unidades += detalle.cantidad_despachada
                         producto.save()
                         
         super().save(*args, **kwargs)
